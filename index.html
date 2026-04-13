@@ -37,14 +37,9 @@
       background:linear-gradient(175deg,#0A1628 0%,#0D2140 40%,#0F2952 100%);
       display:flex;flex-direction:column;
       position:fixed;top:0;left:0;bottom:0;z-index:200;
-      box-shadow:4px 0 32px rgba(0,0,0,.25);
-      overflow-y:auto;overflow-x:hidden;
+      box-shadow:4px 0 32px rgba(0,0,0,.25);overflow:hidden;
       transition:transform .3s ease;
-      scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;
     }
-    aside::-webkit-scrollbar{width:4px}
-    aside::-webkit-scrollbar-track{background:transparent}
-    aside::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
     aside::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(244,123,32,.12) 0%,transparent 70%);top:-80px;right:-80px;pointer-events:none}
     aside::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(30,158,88,.1) 0%,transparent 70%);bottom:80px;left:-60px;pointer-events:none}
 
@@ -129,46 +124,9 @@
     body.sidebar-collapsed .content{margin-left:0}
     body.sidebar-collapsed .toggle-btn{left:12px;background:#0F2952}
     body.sidebar-collapsed .toggle-btn svg{transform:rotate(180deg)}
-
-    /* MOBILE RESPONSIVE */
-    @media(max-width:768px){
-      aside{
-        width:280px;
-        transform:translateX(-280px);
-        z-index:400;
-      }
-      body.sidebar-open aside{
-        transform:translateX(0);
-      }
-      .sidebar-overlay{
-        display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-        z-index:399;backdrop-filter:blur(2px);
-      }
-      body.sidebar-open .sidebar-overlay{display:block}
-      .content{margin-left:0!important}
-      .toggle-btn{left:12px!important;top:14px;background:#1558A8!important}
-      body.sidebar-open .toggle-btn{left:292px!important;background:#0F2952!important}
-      body.sidebar-open .toggle-btn svg{transform:rotate(180deg)}
-      .topbar{padding:0 16px 0 56px;height:56px}
-      .topbar-left h1{font-size:13px}
-      .topbar-left p{display:none}
-      .topbar-sync span{display:none}
-      .btn-refresh span{display:none}
-      .btn-refresh{padding:8px 10px}
-      .page-body{padding:16px}
-      .charts-grid{grid-template-columns:1fr!important;gap:14px}
-      .chart-wrap{height:260px}
-      footer{font-size:10px;padding:10px}
-    }
-    @media(max-width:480px){
-      .topbar-right{gap:8px}
-      .page-body{padding:12px}
-      .chart-wrap{height:220px}
-    }
   </style>
 </head>
 <body>
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="loading">
   <div class="loader-ring"></div>
@@ -366,16 +324,12 @@ function showErr(msg) {
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────
 function toggleSidebar() {
-  const isMobile = window.innerWidth <= 768;
-  if (isMobile) {
-    document.body.classList.toggle('sidebar-open');
-  } else {
-    document.body.classList.toggle('sidebar-collapsed');
-    setTimeout(() => {
-      if (chKec) chKec.resize();
-      if (chKat) chKat.resize();
-    }, 320);
-  }
+  document.body.classList.toggle('sidebar-collapsed');
+  // Trigger chart resize setelah animasi sidebar selesai
+  setTimeout(() => {
+    if (chKec) chKec.resize();
+    if (chKat) chKat.resize();
+  }, 320);
 }
 
 // ── FETCH ─────────────────────────────────────────────────────
@@ -716,7 +670,7 @@ async function downloadPDF() {
     ${logoSrc?`<img src="${logoSrc}" style="height:56px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))"/>`:''}
     <div>
       <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 1px 3px rgba(0,0,0,.2)">Dashboard Monitoring Progres Kelurahan</div>
-      <div style="color:rgba(255,255,255,.75);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota Palu</div>
+      <div style="color:rgba(255,255,255,.75);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota palu</div>
     </div>
   </div>
   <div style="text-align:right">
@@ -736,7 +690,7 @@ async function downloadPDF() {
 
     const pageFooter=(pg,tot)=>`
 <div style="background:#0A1628;padding:9px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span style="color:#6B85A3;font-size:11px">Pengelola SDI Kota Palu &mdash; SDI KOTA PALU</span>
+  <span style="color:#6B85A3;font-size:11px">Pengelola SDI Kota palu &mdash; SDI KOTA PALU</span>
   <span style="color:#6B85A3;font-size:11px;font-weight:600">Halaman ${pg} dari ${tot}</span>
 </div>`;
 
@@ -754,25 +708,25 @@ async function downloadPDF() {
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
-      const barW=Math.max(20,Math.min(50,Math.floor(600/items.length)-10));
+      const barW=Math.max(28,Math.min(60,Math.floor(640/items.length)-8));
       const gridLines=[0,25,50,75,100].map(pct=>{
         const bot=Math.round(pct*scale);
-        return `<div style="position:absolute;bottom:${bot}px;left:32px;right:8px;border-top:1px dashed ${pct===100?'#1558A820':'#E4EAF2'};pointer-events:none">
-          <span style="position:absolute;left:-32px;top:-7px;color:#8A9DB8;font-size:10px">${pct}%</span>
+        return `<div style="position:absolute;bottom:${bot}px;left:36px;right:0;border-top:1px dashed ${pct===100?'#1558A840':'#E4EAF2'};pointer-events:none">
+          <span style="position:absolute;left:-36px;top:-7px;color:#8A9DB8;font-size:10px;font-weight:600">${pct}%</span>
         </div>`;
       }).join('');
       const bars=items.map(({label,val,color})=>{
-        const h=Math.max(3,Math.round(val*scale));
-        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:${barW}px;max-width:${barW+20}px">
-          <div style="color:${color};font-size:11px;font-weight:800;margin-bottom:4px;white-space:nowrap">${val.toFixed(1)}%</div>
-          <div style="width:${barW}px;height:${h}px;background:${color};border-radius:6px 6px 0 0;box-shadow:0 2px 6px ${color}55;min-height:4px"></div>
-          <div style="color:#3D526B;font-size:10px;margin-top:6px;text-align:center;max-width:${barW+16}px;word-break:break-word;line-height:1.3">${label}</div>
+        const h=Math.max(6,Math.round(val*scale));
+        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:${barW}px;max-width:${barW+24}px">
+          <div style="color:${color};font-size:11px;font-weight:800;margin-bottom:5px;white-space:nowrap">${val.toFixed(1)}%</div>
+          <div style="width:${barW}px;height:${h}px;background:linear-gradient(180deg,${color}dd,${color});border-radius:5px 5px 0 0;box-shadow:0 3px 8px ${color}44;min-height:6px"></div>
+          <div style="color:#3D526B;font-size:10px;margin-top:7px;text-align:center;max-width:${barW+20}px;word-break:break-word;line-height:1.4">${label}</div>
         </div>`;
       }).join('');
-      return `<div style="position:relative;padding:0 8px">
-        <div style="position:relative;height:${chartH}px;margin-left:32px">${gridLines}</div>
-        <div style="display:flex;align-items:flex-end;gap:4px;height:${chartH}px;margin-top:-${chartH}px;margin-left:32px;padding-bottom:0">${bars}</div>
-      </div>`;
+      return `<div style="position:relative;padding:20px 8px 0">
+        <div style="position:relative;height:${chartH}px;margin-left:36px;border-bottom:2px solid #CBD5E1">${gridLines}</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:${chartH}px;margin-top:-${chartH}px;margin-left:36px">${bars}</div>
+      </div>`; 
     };
 
     const legend=()=>`
@@ -860,16 +814,8 @@ ${statCardsHtml}
       container.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:1122px;';
       container.innerHTML='';
       const imgData=canvas.toDataURL('image/jpeg',0.95);
-      const imgH=(canvas.height/canvas.width)*PW;
       if(pageIdx>0) doc.addPage();
-      // Fit to page height if needed
-      if(imgH<=PH){
-        doc.addImage(imgData,'JPEG',0,0,PW,imgH);
-      } else {
-        // Scale down to fit
-        const scale=PH/imgH;
-        doc.addImage(imgData,'JPEG',0,0,PW*scale,PH);
-      }
+      doc.addImage(imgData,'JPEG',0,0,PW,PH);
     };
 
     await renderPage(wrap(page1Content,1,totalPages),0);
@@ -883,7 +829,20 @@ ${statCardsHtml}
       const kecAvg=kd.sum/kd.cnt;
       const kc=sColor(kecAvg);
 
-      const kelBarItems2=kd.rows.map(r=>({label:r.kel,val:r.totalProg,color:sColor(r.totalProg)}));
+      // Kelompokkan per kelurahan (rata-rata semua tahun)
+      const kelGroupMap={};
+      for(const r of kd.rows){
+        if(!kelGroupMap[r.kel]) kelGroupMap[r.kel]={sum:0,cnt:0};
+        kelGroupMap[r.kel].sum+=r.totalProg;
+        kelGroupMap[r.kel].cnt++;
+      }
+      const uniqueKelNames=Object.keys(kelGroupMap).sort();
+      const kelBarItems2=uniqueKelNames.map(kn=>({
+        label:kn,
+        val:kelGroupMap[kn].sum/kelGroupMap[kn].cnt,
+        color:sColor(kelGroupMap[kn].sum/kelGroupMap[kn].cnt)
+      }));
+
       const kecCatItems=CAT_NAMES.map(cn=>{
         let s=0,c2=0;
         for(const r of kd.rows){s+=r.cats[cn]?.prog||0;c2++;}
@@ -891,68 +850,73 @@ ${statCardsHtml}
         return{label:cn,val:avg,color:sColor(avg)};
       });
 
-      // Kecamatan banner
-      const kecBanner=`
-<div style="background:linear-gradient(135deg,#0D1B2E,#15325A);border-radius:14px;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
-  <div style="display:flex;align-items:center;gap:14px">
-    <div style="width:6px;height:48px;background:${kc};border-radius:4px"></div>
-    <div>
-      <div style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Laporan Detail</div>
-      <div style="color:#fff;font-size:20px;font-weight:900;margin-top:2px">Kecamatan ${kecName}</div>
-      <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:2px">${kd.cnt} kelurahan terdaftar</div>
-    </div>
-  </div>
-  <div style="background:${kc};border-radius:12px;padding:14px 24px;text-align:center;box-shadow:0 4px 14px ${kc}66">
-    <div style="color:#fff;font-size:26px;font-weight:900">${kecAvg.toFixed(1)}%</div>
-    <div style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700;margin-top:2px">${sLabel(kecAvg)}</div>
-  </div>
+      // 6 stat cards — identik halaman 1
+      const kJS=kelBarItems2.filter(r=>r.val>=100).length;
+      const kJB=kelBarItems2.filter(r=>r.val>=75&&r.val<100).length;
+      const kJSd=kelBarItems2.filter(r=>r.val>=50&&r.val<75).length;
+      const kJR=kelBarItems2.filter(r=>r.val<50).length;
+      const kecStatCards=`
+<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px">
+  ${[
+    {v:uniqueKelNames.length,l:'Total Kelurahan',sub:'data tercatat',   c:'#1558A8'},
+    {v:kecAvg.toFixed(1)+'%',l:'Rata-rata Progres',sub:'kecamatan ini',c:'#F47B20'},
+    {v:kJS, l:'Selesai',sub:'Progres \u2265100%',c:'#1E9E58'},
+    {v:kJB, l:'Baik',   sub:'Progres 75\u201399%',c:'#1558A8'},
+    {v:kJSd,l:'Sedang', sub:'Progres 50\u201374%',c:'#F47B20'},
+    {v:kJR, l:'Rendah', sub:'Progres <50%',      c:'#e63946'},
+  ].map(i=>`
+    <div style="background:${i.c};border-radius:14px;padding:18px 12px;text-align:center;color:#fff;box-shadow:0 4px 14px ${i.c}55">
+      <div style="font-size:28px;font-weight:900;line-height:1">${i.v}</div>
+      <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">${i.l}</div>
+      <div style="font-size:10px;opacity:.75;margin-top:3px">${i.sub}</div>
+    </div>`).join('')}
 </div>`;
 
-      // Tabel kelurahan
-      const tblRows=kd.rows.map((r,i)=>`
+      // Tabel detail
+      const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
+      const tblRows=sortedRows.map((r,i)=>`
 <tr style="background:${i%2===0?'#fff':'#F8FAFD'}">
-  <td style="padding:8px 12px;color:#8A9DB8;font-size:11px;text-align:center;border-right:1px solid #E4EAF2">${i+1}</td>
-  <td style="padding:8px 14px;font-weight:700;font-size:12px;border-right:1px solid #E4EAF2">${r.kel}</td>
-  <td style="padding:8px 10px;text-align:center;font-size:11px;color:#5A7290;border-right:1px solid #E4EAF2">${r.tahun}</td>
-  <td style="padding:8px 12px;text-align:right;font-size:11px;border-right:1px solid #E4EAF2">${r.totalPeng.toLocaleString('id')}</td>
-  <td style="padding:8px 12px;text-align:right;font-size:11px;border-right:1px solid #E4EAF2">${r.totalTgt.toLocaleString('id')}</td>
-  <td style="padding:8px 10px;text-align:center;font-weight:900;font-size:13px;color:${sColor(r.totalProg)};background:${sColor(r.totalProg)}15;border-right:1px solid #E4EAF2">${r.totalProg.toFixed(1)}%</td>
-  ${CAT_NAMES.map(cn=>`<td style="padding:8px 6px;text-align:center;font-size:10px;color:${sColor(r.cats[cn]?.prog||0)};font-weight:700;border-right:1px solid #F0F4F9">${(r.cats[cn]?.prog||0).toFixed(1)}%</td>`).join('')}
+  <td style="padding:7px 10px;color:#8A9DB8;font-size:10px;text-align:center;border-right:1px solid #E4EAF2">${i+1}</td>
+  <td style="padding:7px 12px;font-weight:700;font-size:11px;border-right:1px solid #E4EAF2">${r.kel}</td>
+  <td style="padding:7px 8px;text-align:center;font-size:10px;color:#5A7290;border-right:1px solid #E4EAF2">${r.tahun}</td>
+  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalPeng.toLocaleString('id')}</td>
+  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalTgt.toLocaleString('id')}</td>
+  <td style="padding:7px 8px;text-align:center;font-weight:900;font-size:12px;color:${sColor(r.totalProg)};background:${sColor(r.totalProg)}15;border-right:1px solid #E4EAF2">${r.totalProg.toFixed(1)}%</td>
+  ${CAT_NAMES.map(cn=>`<td style="padding:7px 5px;text-align:center;font-size:9px;color:${sColor(r.cats[cn]?.prog||0)};font-weight:700;border-right:1px solid #F0F4F9">${(r.cats[cn]?.prog||0).toFixed(1)}%</td>`).join('')}
 </tr>`).join('');
 
       const tabelDetail=`
-<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-top:16px">
   <div style="background:linear-gradient(90deg,#0D1B2E,#15325A);padding:12px 20px;display:flex;align-items:center;gap:10px">
     <div style="width:5px;height:22px;background:${kc};border-radius:3px"></div>
     <span style="color:#fff;font-size:14px;font-weight:800">Detail Data Kelurahan &mdash; Semua 10 Kategori</span>
   </div>
-  <div style="overflow-x:auto">
   <table style="width:100%;border-collapse:collapse">
     <thead>
       <tr style="background:#15325A">
-        <th style="padding:10px 12px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid #1558A820;white-space:nowrap">No</th>
-        <th style="padding:10px 14px;color:#fff;font-size:10px;font-weight:700;text-align:left;border-right:1px solid #1558A820;min-width:120px">Kelurahan</th>
-        <th style="padding:10px 10px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid #1558A820">Thn</th>
-        <th style="padding:10px 12px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid #1558A820;white-space:nowrap">Pengisian</th>
-        <th style="padding:10px 12px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid #1558A820;white-space:nowrap">Target</th>
-        <th style="padding:10px 10px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid #1558A820;white-space:nowrap;background:#0D1B2E">Total %</th>
-        ${CAT_NAMES.map(cn=>`<th style="padding:10px 6px;color:#94B4D4;font-size:9px;font-weight:700;text-align:center;border-right:1px solid #1558A820;white-space:nowrap">${cn}</th>`).join('')}
+        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1)">No</th>
+        <th style="padding:9px 12px;color:#fff;font-size:10px;font-weight:700;text-align:left;border-right:1px solid rgba(255,255,255,.1);min-width:110px">Kelurahan</th>
+        <th style="padding:9px 8px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Thn</th>
+        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid rgba(255,255,255,.1);white-space:nowrap">Pengisian</th>
+        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid rgba(255,255,255,.1);white-space:nowrap">Target</th>
+        <th style="padding:9px 8px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1);background:#0D1B2E">Total %</th>
+        ${CAT_NAMES.map(cn=>`<th style="padding:9px 5px;color:#94B4D4;font-size:9px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.07);white-space:nowrap">${cn}</th>`).join('')}
       </tr>
     </thead>
     <tbody>${tblRows}</tbody>
   </table>
-  </div>
 </div>`;
 
+      // Konten — struktur IDENTIK halaman 1
       const kecContent=`
-${kecBanner}
-<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px">
-  ${card(kc,
-    cardTitle('Progres per Kelurahan','Persentase progres total tiap kelurahan di kecamatan ini','Bar Chart',kc)+
-    vBarSection(kelBarItems2,160)+legend()
+${kecStatCards}
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
+  ${card('#F47B20',
+    cardTitle('Progres per Kelurahan','Rata-rata persentase progres tiap kelurahan','Diagram Batang','#1558A8')+
+    vBarSection(kelBarItems2,220)+legend()
   )}
-  ${card('#1558A8',
-    cardTitle('Rata-rata per Kategori','Rata-rata progres tiap kategori untuk kecamatan ini','Horizontal Bar','#F47B20')+
+  ${card('#1E9E58',
+    cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
     hBarSection(kecCatItems)
   )}
 </div>
