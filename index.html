@@ -124,9 +124,42 @@
     body.sidebar-collapsed .content{margin-left:0}
     body.sidebar-collapsed .toggle-btn{left:12px;background:#7A3500}
     body.sidebar-collapsed .toggle-btn svg{transform:rotate(180deg)}
+
+    /* OVERLAY — mobile */
+    .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;backdrop-filter:blur(2px)}
+
+    /* MOBILE */
+    @media(max-width:768px){
+      aside{
+        transform:translateX(-260px);
+        overflow-y:auto;overflow-x:hidden;
+        scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+      }
+      aside::-webkit-scrollbar{width:4px}
+      aside::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:4px}
+      body.sidebar-open aside{transform:translateX(0)!important}
+      body.sidebar-open .sb-overlay{display:block}
+      .content{margin-left:0!important}
+      .toggle-btn{left:12px!important;top:13px;background:#C45800!important}
+      body.sidebar-open .toggle-btn{left:268px!important;background:#7A3500!important}
+      body.sidebar-open .toggle-btn svg{transform:rotate(180deg)}
+      body:not(.sidebar-open) .toggle-btn svg{transform:none}
+      .topbar{padding:0 12px 0 54px;height:54px}
+      .topbar-left h1{font-size:13px}
+      .topbar-left p{display:none}
+      .page-body{padding:14px 12px}
+      .charts-grid{grid-template-columns:1fr!important;gap:12px}
+      .chart-wrap{height:240px}
+    }
+    @media(max-width:480px){
+      .page-body{padding:10px 8px}
+      .chart-wrap{height:200px}
+      .topbar-sync{display:none}
+    }
   </style>
 </head>
 <body>
+<div class="sb-overlay" onclick="toggleSidebar()"></div>
 
 <div id="loading">
   <div class="loader-ring"></div>
@@ -324,12 +357,16 @@ function showErr(msg) {
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────
 function toggleSidebar() {
-  document.body.classList.toggle('sidebar-collapsed');
-  // Trigger chart resize setelah animasi sidebar selesai
-  setTimeout(() => {
-    if (chKec) chKec.resize();
-    if (chKat) chKat.resize();
-  }, 320);
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    document.body.classList.toggle('sidebar-open');
+  } else {
+    document.body.classList.toggle('sidebar-collapsed');
+    setTimeout(() => {
+      if (chKec) chKec.resize();
+      if (chKat) chKat.resize();
+    }, 320);
+  }
 }
 
 // ── FETCH ─────────────────────────────────────────────────────
