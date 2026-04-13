@@ -37,9 +37,15 @@
       background:linear-gradient(175deg,#7A3500 0%,#A84A00 40%,#C45800 100%);
       display:flex;flex-direction:column;
       position:fixed;top:0;left:0;bottom:0;z-index:200;
-      box-shadow:4px 0 32px rgba(0,0,0,.25);overflow:hidden;
+      box-shadow:4px 0 32px rgba(0,0,0,.25);
+      overflow-y:auto;overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
       transition:transform .3s ease;
+      scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
     }
+    aside::-webkit-scrollbar{width:4px}
+    aside::-webkit-scrollbar-track{background:transparent}
+    aside::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:4px}
     aside::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);top:-80px;right:-80px;pointer-events:none}
     aside::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,200,100,.15) 0%,transparent 70%);bottom:80px;left:-60px;pointer-events:none}
 
@@ -132,8 +138,7 @@
     @media(max-width:768px){
       aside{
         transform:translateX(-260px);
-        overflow-y:auto;overflow-x:hidden;
-        scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+        -webkit-overflow-scrolling:touch;
       }
       aside::-webkit-scrollbar{width:4px}
       aside::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:4px}
