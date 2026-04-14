@@ -722,11 +722,11 @@ async function downloadPDF() {
 </div>`;
 
     const filterBar=()=>`
-<div style="background:#EBF1FB;border-left:4px solid #1558A8;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0">
-  <span style="color:#1558A8;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">Filter Aktif</span>
+<div style="background:#FFF3EO;border-left:4px solid #C45800;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0">
+  <span style="color:#A84A00;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">Filter Aktif</span>
   <span style="color:#ccc">|</span>
   ${[`Tahun: ${fTahun}`,`Kecamatan: ${fKec}`,`Kelurahan: ${fKel}`,`Kategori: ${fKat}`]
-    .map(p=>`<span style="background:#1558A8;color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px">${p}</span>`)
+    .map(p=>`<span style="background:#C45800;color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px">${p}</span>`)
     .join('')}
 </div>`;
 
