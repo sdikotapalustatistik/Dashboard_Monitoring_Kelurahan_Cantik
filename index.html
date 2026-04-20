@@ -700,8 +700,12 @@ async function downloadPDF() {
     const jSd=kelRows.filter(r=>r.totalProg>=50&&r.totalProg<75).length;
     const jR=kelRows.filter(r=>r.totalProg<50).length;
 
-    let logoSrc='';
-    try{logoSrc=document.querySelector('.sb-logo img').src;}catch(e){}
+    let logoSrc='', logoSrc2='';
+    try{
+      const imgs=document.querySelectorAll('.sb-brand img');
+      if(imgs[0]) logoSrc=imgs[0].src;
+      if(imgs[1]) logoSrc2=imgs[1].src;
+    }catch(e){}
 
     const W=1122;
     const kecList=Object.keys(kecMap).sort();
@@ -711,7 +715,8 @@ async function downloadPDF() {
     const pageHeader=()=>`
 <div style="background:linear-gradient(90deg,#C45800,#A84A00);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid #FFD580">
   <div style="display:flex;align-items:center;gap:16px">
-    ${logoSrc?`<img src="${logoSrc}" style="height:56px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))"/>`:''}
+    ${logoSrc?`<img src="${logoSrc}" style="height:52px;width:auto;object-fit:contain"/>`:''}
+    ${logoSrc2?`<img src="${logoSrc2}" style="height:52px;width:auto;object-fit:contain;border-radius:6px;background:#fff;padding:2px"/>`:''}
     <div>
       <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 1px 3px rgba(0,0,0,.2)">Dashboard Monitoring Progres Kelurahan</div>
       <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota Palu</div>
