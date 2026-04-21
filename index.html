@@ -757,7 +757,7 @@ async function downloadPDF() {
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
-      const barW=Math.max(28,Math.min(60,Math.floor(640/items.length)-8));
+      const barW=Math.max(18,Math.min(36,Math.floor(500/items.length)-8));
       const gridLines=[0,25,50,75,100].map(pct=>{
         const bot=Math.round(pct*scale);
         return `<div style="position:absolute;bottom:${bot}px;left:36px;right:0;border-top:1px dashed ${pct===100?'#1558A840':'#E4EAF2'};pointer-events:none">
@@ -844,7 +844,7 @@ ${statCardsHtml}
 <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
   ${card('#F47B20',
     cardTitle('Progres per Kecamatan','Rata-rata persentase progres pengisian tiap kecamatan','Diagram Batang','#1558A8')+
-    vBarSection(kecBarItems,180)+legend()
+    vBarSection(kecBarItems,260)+legend()
   )}
   ${card('#1E9E58',
     cardTitle('Progres per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
@@ -968,7 +968,7 @@ ${kecStatCards}
 <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
   ${card('#F47B20',
     cardTitle('Progres per Kelurahan','Rata-rata persentase progres tiap kelurahan','Diagram Batang','#1558A8')+
-    vBarSection(kelBarItems2,180)+legend()
+    vBarSection(kelBarItems2,260)+legend()
   )}
   ${card('#1E9E58',
     cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
