@@ -703,10 +703,10 @@ async function downloadPDF() {
    let logoSrc='', logoSrc2='';
     try{
       const imgs=document.querySelectorAll('.sb-brand img');
-      if(imgs[0]) logoSrc=imgs[0].src;
-      if(imgs[1]) logoSrc2=imgs[1].src;
-      console.log('Logo 1:', logoSrc?.substring(0,50));
-      console.log('Logo 2:', logoSrc2?.substring(0,50));
+      if(imgs[0]) logoSrc=imgs[0].currentSrc||imgs[0].src;
+      if(imgs[1]) logoSrc2=imgs[1].currentSrc||imgs[1].src;
+      // Force reload dengan timestamp
+      if(logoSrc2) logoSrc2=logoSrc2.split('?')[0]+'?v='+Date.now();
     }catch(e){}
 
     const W=1122;
@@ -722,7 +722,7 @@ async function downloadPDF() {
       <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 1px 3px rgba(0,0,0,.2)">Dashboard Monitoring Progres Kelurahan</div>
       <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota Palu</div>
     </div>
-     ${logoSrc2?`<img src="${logoSrc2}" style="height:52px;width:auto;object-fit:contain;border-radius:6px;background:#fff;padding:2px"/>`:''}
+     ${logoSrc2?`<img src="${logoSrc2}" style="height:52px;width:auto;object-fit:contain"/>`:''}
   </div>
   <div style="text-align:right">
     <div style="color:rgba(255,255,255,.7);font-size:11px">Dicetak:</div>
