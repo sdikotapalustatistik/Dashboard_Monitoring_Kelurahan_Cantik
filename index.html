@@ -757,7 +757,7 @@ async function downloadPDF() {
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
-      const barW=Math.max(18,Math.min(36,Math.floor(500/items.length)-8));
+      const barW=Math.max(22,Math.min(45,Math.floor(560/items.length)-8));
       const gridLines=[0,25,50,75,100].map(pct=>{
         const bot=Math.round(pct*scale);
         return `<div style="position:absolute;bottom:${bot}px;left:36px;right:0;border-top:1px dashed ${pct===100?'#1558A840':'#E4EAF2'};pointer-events:none">
