@@ -700,11 +700,13 @@ async function downloadPDF() {
     const jSd=kelRows.filter(r=>r.totalProg>=50&&r.totalProg<75).length;
     const jR=kelRows.filter(r=>r.totalProg<50).length;
 
-    let logoSrc='', logoSrc2='';
+   let logoSrc='', logoSrc2='';
     try{
       const imgs=document.querySelectorAll('.sb-brand img');
       if(imgs[0]) logoSrc=imgs[0].src;
       if(imgs[1]) logoSrc2=imgs[1].src;
+      console.log('Logo 1:', logoSrc?.substring(0,50));
+      console.log('Logo 2:', logoSrc2?.substring(0,50));
     }catch(e){}
 
     const W=1122;
