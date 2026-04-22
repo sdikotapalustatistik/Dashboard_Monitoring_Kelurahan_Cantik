@@ -969,7 +969,7 @@ ${statCardsHtml}
 ${kecStatCards}
 <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
   ${card('#F47B20',
-    cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b>'+(fKel!=='Semua'?'| <b>Kecamatan '+kecName+'</b>  | <b>Kelurahan '+fKel+'</b>':'')+' | Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
+    cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b> | <b>Kecamatan '+kecName+'</b>'+(fKel!=='Semua'?' | <b>Kelurahan '+fKel+'</b>':''+'')+'<br>Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
     vBarSection(kelBarItems2,260)+legend()
   )}
   ${card('#1E9E58',
