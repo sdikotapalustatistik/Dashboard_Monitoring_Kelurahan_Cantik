@@ -527,7 +527,7 @@ function renderKecChart() {
 
   // Kelompokkan per kecamatan, hitung rata-rata totalProg
   const fkel = document.getElementById('fKel').value;
-    const groupKey = fKel ? 'kel' : 'kec';
+    const groupKey = (fKel && fKel !== '' && fKel !== 'Semua') ? 'kel' : 'kec';
     const kecMap = {};
     for (const d of uniqueRows) {
       const key = d[groupKey];
