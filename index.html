@@ -287,7 +287,6 @@
             <div class="legend-item"><div class="legend-dot" style="background:#1558A8"></div>75–99%</div>
             <div class="legend-item"><div class="legend-dot" style="background:#F47B20"></div>50–74%</div>
             <div class="legend-item"><div class="legend-dot" style="background:#e63946"></div>&lt; 50%</div>
-            <div class="legend-item"><div style="width:18px;height:2px;border-top:2px dashed #7C3AED"></div>&nbsp;Rata-rata Kota</div>
           </div>
         </div>
 
@@ -515,7 +514,7 @@ function renderCharts() {
   renderKatChart();
 }
 
-// ── Chart 1: Progres per Kecamatan (Bar) + Garis Rata-rata Kota ──
+// ── Chart 1: Progres per Kecamatan (Bar) ──
 function renderKecChart() {
   const uniqueRows = [...new Map(
     filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
@@ -539,11 +538,6 @@ function renderKecChart() {
   });
   const colors = values.map(v => progColor(v));
 
-  // Hitung rata-rata Kota Palu dari semua uniqueRows
-  const kotaAvg = uniqueRows.length
-    ? Math.round((uniqueRows.reduce((s, d) => s + d.totalProg, 0) / uniqueRows.length) * 10) / 10
-    : 0;
-
   // Update judul & deskripsi card
   const fKec = document.getElementById('fKec').value;
   const titleEl = document.getElementById('kec-chart-title');
@@ -565,21 +559,6 @@ function renderKecChart() {
           backgroundColor: colors,
           borderRadius: 6,
           borderSkipped: false,
-          order: 2,
-        },
-        {
-          label: `Rata-rata Kota Palu (${kotaAvg.toFixed(1)}%)`,
-          data: labels.map(() => kotaAvg),
-          type: 'line',
-          borderColor: '#7C3AED',
-          borderWidth: 2.5,
-          borderDash: [6, 4],
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          fill: false,
-          tension: 0,
-          datalabels: { display: false },
-          order: 1,
         }
       ]
     },
@@ -587,31 +566,16 @@ function renderKecChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          align: 'end',
-          labels: {
-            font: { size: 11, family: 'Sora', weight: '600' },
-            color: '#3D526B',
-            boxWidth: 20,
-            boxHeight: 3,
-            padding: 16,
-            usePointStyle: true,
-            pointStyle: 'line',
-          }
-        },
+        legend: { display: false },
         datalabels: {
           anchor: 'end', align: 'top',
           font: { size: 10, weight: '700', family: 'Sora' },
           color: '#3D526B',
-          formatter: (v, ctx) => ctx.datasetIndex === 0 ? v.toFixed(1) + '%' : null
+          formatter: v => v.toFixed(1) + '%'
         },
         tooltip: {
           callbacks: {
-            label: ctx => ctx.datasetIndex === 0
-              ? ` ${ctx.raw.toFixed(1)}%`
-              : ` Rata-rata Kota Palu: ${ctx.raw.toFixed(1)}%`
+            label: ctx => ` ${ctx.raw.toFixed(1)}%`
           }
         }
       },
@@ -1033,3 +997,4 @@ loadAllData();
 </script>
 </body>
 </html>
+
