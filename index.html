@@ -526,23 +526,15 @@ function renderKecChart() {
   ).values()];
 
   // Kelompokkan per kecamatan, hitung rata-rata totalProg
-  const kecMap = document.getElemenById('fkel').value;
-    const groupKey = fkel ? 'kel' : 'kec' ;
-    const fKel = document.getElementById('fKel').value;
+  const fkel = document.getElementById('fKel').value;
     const groupKey = fKel ? 'kel' : 'kec';
-    const titleEl = document.getElementById('kec-chart-title');
-    const descEl = document.getElementById('kec-chart-desc');
-    if (titleEl) titleEl.textContent = fKel ? 'Progres per Kelurahan' : 'Progres per Kecamatan';
-    if (descEl) descEl.textContent = fKel
-      ? 'Rata-rata persentase progres tiap kelurahan'
-      : 'Rata-rata persentase progres pengisian tiap kecamatan';
     const kecMap = {};
     for (const d of uniqueRows) {
       const key = d[groupKey];
-      if (!kecMap[key]) kecMap[key] = {sum: 0, count: 0};
+      if (!kecMap[key]) kecMap[key] = { sum: 0, count: 0 };
       kecMap[key].sum += d.totalProg;
       kecMap[key].count++;
-  }
+    }
 
   const labels = Object.keys(kecMap).sort();
   const values = labels.map(k => {
