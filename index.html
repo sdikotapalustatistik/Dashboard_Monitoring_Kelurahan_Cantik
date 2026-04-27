@@ -287,6 +287,7 @@
             <div class="legend-item"><div class="legend-dot" style="background:#1558A8"></div>75–99%</div>
             <div class="legend-item"><div class="legend-dot" style="background:#F47B20"></div>50–74%</div>
             <div class="legend-item"><div class="legend-dot" style="background:#e63946"></div>&lt; 50%</div>
+            <div class="legend-item"><div style="width:18px;height:2px;border-top:2px dashed #7C3AED"></div>&nbsp;Rata-rata Kota</div>
           </div>
         </div>
 
@@ -299,29 +300,6 @@
             <span class="card-tag tag-orange">Horizontal Bar</span>
           </div>
           <div class="chart-wrap"><canvas id="cKat"></canvas></div>
-        </div>
-      </div>
-
-      <!-- CHART KOTA PALU -->
-      <div class="chart-card" style="margin-bottom:18px">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Progres Keseluruhan Kota Palu</div>
-            <div class="card-desc">Rata-rata progres per kecamatan + garis rata-rata kota</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span id="kota-avg-label" style="font-size:12px;font-weight:600;color:var(--text2)"></span>
-            <span id="kota-avg-badge" style="font-size:13px;font-weight:800;color:#fff;padding:5px 14px;border-radius:20px"></span>
-            <span class="card-tag tag-blue">Kota Palu</span>
-          </div>
-        </div>
-        <div class="chart-wrap"><canvas id="cKota"></canvas></div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#1E9E58"></div>≥ 100%</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#1558A8"></div>75–99%</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#F47B20"></div>50–74%</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#e63946"></div>&lt; 50%</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#7C3AED;border-radius:0;height:3px;width:18px"></div>Rata-rata Kota</div>
         </div>
       </div>
     </div>
@@ -367,7 +345,7 @@ function progColor(v) {
   return '#DC2626';
 }
 
-// ── FIX: fungsi setSync ────────────────────────────────────────
+// ── fungsi setSync ────────────────────────────────────────
 function setSync() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2,'0');
@@ -376,7 +354,7 @@ function setSync() {
   document.getElementById('syncDot').style.background = '#22c55e';
 }
 
-// ── FIX: fungsi showErr ────────────────────────────────────────
+// ── fungsi showErr ────────────────────────────────────────
 function showErr(msg) {
   const banner = document.getElementById('error-banner');
   document.getElementById('error-msg').textContent = msg;
@@ -409,7 +387,6 @@ async function fetchSheet(cfg) {
   }
   if (!res.ok) throw new Error(`HTTP ${res.status} saat mengambil sheet "${cfg.name}". Pastikan sheet sudah dipublikasikan.`);
   const txt = await res.text();
-  // Cek apakah Google mengembalikan error
   if (txt.includes('"errors"') && !txt.includes('google.visualization')) {
     throw new Error(`Google Sheets menolak akses sheet "${cfg.name}". Pastikan sheet dipublikasikan ke web dan nama tab persis sama.`);
   }
@@ -440,10 +417,7 @@ async function fetchSheet(cfg) {
 
     const totalPeng = parseFloat(c[3]?.v) || 0;
     const totalTgt  = parseFloat(c[4]?.v) || 0;
-    // FIX: Hitung progres dari pengisian/target (bukan pakai kolom F langsung)
-    // Kolom F mungkin format desimal (0.85) atau persen (85), kita normalisasi
     let totalProgRaw = parseFloat(c[5]?.v) || 0;
-    // Jika nilai < 2, kemungkinan format desimal (0–1), konversi ke persen
     const totalProg = totalProgRaw > 0 && totalProgRaw <= 1.5
       ? totalProgRaw * 100
       : totalProgRaw;
@@ -452,7 +426,6 @@ async function fetchSheet(cfg) {
       const peng = parseFloat(c[cat.p]?.v) || 0;
       const tgt  = parseFloat(c[cat.t]?.v) || 0;
       let progRaw = parseFloat(c[cat.g]?.v) || 0;
-      // Normalisasi format desimal ke persen
       const prog = progRaw > 0 && progRaw <= 1.5 ? progRaw * 100 : progRaw;
 
       out.push({
@@ -480,7 +453,7 @@ async function loadAllData() {
       allData = allData.concat(await fetchSheet(cfg));
     }
     if (allData.length === 0) {
-      showErr('Data berhasil diambil tapi kosong. Kemungkinan struktur kolom sheet berbeda dari yang diharapkan. Cek apakah baris data dimulai dari baris ke-4 dan kolom A berisi nomor urut.');
+      showErr('Data berhasil diambil tapi kosong. Kemungkinan struktur kolom sheet berbeda dari yang diharapkan.');
       return;
     }
     buildKecFilter();
@@ -536,57 +509,66 @@ function resetFilters() {
   applyFilters();
 }
 
-// ── FIX: fungsi renderCharts ───────────────────────────────────
+// ── RENDER CHARTS ─────────────────────────────────────────────
 function renderCharts() {
   renderKecChart();
   renderKatChart();
-  renderKotaChart();
 }
-  // Chart 3: Progres Kota Palu — rata-rata per kecamatan + garis rata-rata kota
-function renderKotaChart() {
+
+// ── Chart 1: Progres per Kecamatan (Bar) + Garis Rata-rata Kota ──
+function renderKecChart() {
   const uniqueRows = [...new Map(
     filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
   ).values()];
 
+  const fKelValue = document.getElementById('fKel').value;
+  const groupKey = (fKelValue && fKelValue !== '') ? 'kel' : 'kec';
+
   const kecMap = {};
   for (const d of uniqueRows) {
-    if (!kecMap[d.kec]) kecMap[d.kec] = { sum: 0, count: 0 };
-    kecMap[d.kec].sum   += d.totalProg;
-    kecMap[d.kec].count++;
+    const key = d[groupKey];
+    if (!kecMap[key]) kecMap[key] = { sum: 0, count: 0 };
+    kecMap[key].sum += d.totalProg;
+    kecMap[key].count++;
   }
 
   const labels = Object.keys(kecMap).sort();
-  const values = labels.map(k => Math.round((kecMap[k].sum / kecMap[k].count) * 10) / 10);
+  const values = labels.map(k => {
+    const avg = kecMap[k].sum / kecMap[k].count;
+    return Math.round(avg * 10) / 10;
+  });
   const colors = values.map(v => progColor(v));
 
+  // Hitung rata-rata Kota Palu dari semua uniqueRows
   const kotaAvg = uniqueRows.length
     ? Math.round((uniqueRows.reduce((s, d) => s + d.totalProg, 0) / uniqueRows.length) * 10) / 10
     : 0;
 
-  const badge = document.getElementById('kota-avg-badge');
-  if (badge) {
-    badge.textContent = kotaAvg.toFixed(1) + '%';
-    badge.style.background = progColor(kotaAvg);
-  }
-  const badgeLbl = document.getElementById('kota-avg-label');
-  if (badgeLbl) badgeLbl.textContent = `Rata-rata Kota Palu: ${kotaAvg.toFixed(1)}%`;
+  // Update judul & deskripsi card
+  const fKec = document.getElementById('fKec').value;
+  const titleEl = document.getElementById('kec-chart-title');
+  const descEl  = document.getElementById('kec-chart-desc');
+  if (titleEl) titleEl.textContent = fKec ? `Progres per Kelurahan — ${fKec}` : 'Progres per Kecamatan';
+  if (descEl)  descEl.textContent  = fKec
+    ? `Rata-rata progres kelurahan di ${fKec}`
+    : 'Rata-rata persentase progres pengisian tiap kecamatan';
 
-  if (chKota) chKota.destroy();
-  chKota = new Chart(document.getElementById('cKota'), {
+  if (chKec) chKec.destroy();
+  chKec = new Chart(document.getElementById('cKec'), {
     type: 'bar',
     data: {
       labels,
       datasets: [
         {
-          label: 'Progres per Kecamatan',
+          label: 'Progres',
           data: values,
           backgroundColor: colors,
-          borderRadius: 7,
+          borderRadius: 6,
           borderSkipped: false,
           order: 2,
         },
         {
-          label: `Rata-rata Kota (${kotaAvg.toFixed(1)}%)`,
+          label: `Rata-rata Kota Palu (${kotaAvg.toFixed(1)}%)`,
           data: labels.map(() => kotaAvg),
           type: 'line',
           borderColor: '#7C3AED',
@@ -629,7 +611,7 @@ function renderKotaChart() {
           callbacks: {
             label: ctx => ctx.datasetIndex === 0
               ? ` ${ctx.raw.toFixed(1)}%`
-              : ` Rata-rata Kota: ${ctx.raw.toFixed(1)}%`
+              : ` Rata-rata Kota Palu: ${ctx.raw.toFixed(1)}%`
           }
         }
       },
@@ -652,82 +634,8 @@ function renderKotaChart() {
   });
 }
 
-// Chart 1: Progres per Kecamatan (Bar)
-function renderKecChart() {
-  // Deduplikasi: ambil satu baris per kombinasi kec+kel+tahun untuk totalProg
-  const uniqueRows = [...new Map(
-    filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
-  ).values()];
-
-  // Kelompokkan per kecamatan, hitung rata-rata totalProg
-  const fKelValue = document.getElementById('fKel').value;
-const groupKey = (fKelValue && fKelValue !== '') ? 'kel' : 'kec';
-    const kecMap = {};
-    for (const d of uniqueRows) {
-      const key = d[groupKey];
-      if (!kecMap[key]) kecMap[key] = { sum: 0, count: 0 };
-      kecMap[key].sum += d.totalProg;
-      kecMap[key].count++;
-    }
-
-  const labels = Object.keys(kecMap).sort();
-  const values = labels.map(k => {
-    const avg = kecMap[k].sum / kecMap[k].count;
-    return Math.round(avg * 10) / 10;
-  });
-  const colors = values.map(v => progColor(v));
-
-  if (chKec) chKec.destroy();
-  chKec = new Chart(document.getElementById('cKec'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors,
-        borderRadius: 6,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          anchor: 'end', align: 'top',
-          font: { size: 10, weight: '700', family: 'Sora' },
-          color: '#3D526B',
-          formatter: v => v.toFixed(1) + '%'
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.raw.toFixed(1)}%`
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 10, family: 'Sora' }, color: '#3D526B' }
-        },
-        y: {
-          min: 0, max: 110,
-          grid: { color: '#E4EAF2' },
-          ticks: {
-            font: { size: 10, family: 'Sora' }, color: '#8A9DB8',
-            callback: v => v + '%'
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-// Chart 2: Progres per Kategori (Horizontal Bar)
+// ── Chart 2: Progres per Kategori (Horizontal Bar) ──
 function renderKatChart() {
-  // Kelompokkan per kategori, hitung rata-rata progres
   const katMap = {};
   for (const d of filtered) {
     if (!katMap[d.kategori]) katMap[d.kategori] = { sum: 0, count: 0 };
@@ -811,7 +719,6 @@ async function downloadPDF() {
     const fKat   = document.getElementById('fKat').value   || 'Semua';
     const CAT_NAMES = ['Umum','Sumber Daya Alam','Pemerintahan','Penduduk','Pendidikan','Kesehatan','Sosial','Ekonomi','Pertanian','Lingkungan'];
 
-    // Susun data
     const kelMap = new Map();
     for (const d of filtered) {
       const key = `${d.kec}||${d.kel}||${d.tahun}`;
@@ -837,12 +744,11 @@ async function downloadPDF() {
     const jSd=kelRows.filter(r=>r.totalProg>=50&&r.totalProg<75).length;
     const jR=kelRows.filter(r=>r.totalProg<50).length;
 
-   let logoSrc='', logoSrc2='';
+    let logoSrc='', logoSrc2='';
     try{
       const imgs=document.querySelectorAll('.sb-brand img');
       if(imgs[0]) logoSrc=imgs[0].currentSrc||imgs[0].src;
       if(imgs[1]) logoSrc2=imgs[1].currentSrc||imgs[1].src;
-      // Force reload dengan timestamp
       if(logoSrc2) logoSrc2=logoSrc2.split('?')[0]+'?v='+Date.now();
     }catch(e){}
 
@@ -850,7 +756,6 @@ async function downloadPDF() {
     const kecList=Object.keys(kecMap).sort();
     const totalPages=1+kecList.length;
 
-    // ── Shared HTML blocks ──────────────────────────────────────
     const pageHeader=()=>`
 <div style="background:linear-gradient(90deg,#C45800,#A84A00);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid #FFD580">
   <div style="display:flex;align-items:center;gap:16px">
@@ -882,7 +787,6 @@ async function downloadPDF() {
   <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Halaman ${pg} dari ${tot}</span>
 </div>`;
 
-    // ── Horizontal bar chart (untuk kategori) ──────────────────
     const hBarSection=(items)=>items.map(({label,val,color})=>`
 <div style="display:flex;align-items:center;gap:0;padding:6px 0;border-bottom:1px solid #F0F4F9">
   <div style="min-width:140px;text-align:right;padding-right:12px;color:#0D1B2E;font-size:12px;font-weight:600">${label}</div>
@@ -892,7 +796,6 @@ async function downloadPDF() {
   <div style="min-width:56px;text-align:left;padding-left:10px;color:${color};font-size:13px;font-weight:800">${val>0?val.toFixed(1)+'%':'&#8212;'}</div>
 </div>`).join('');
 
-    // ── Vertical bar chart ──────────────────────────────────────
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
@@ -925,7 +828,7 @@ async function downloadPDF() {
         }).join('')}
       </div>
     </div>`;
-  };
+    };
 
     const legend=()=>`
 <div style="display:flex;gap:18px;margin-top:14px;padding-top:10px;border-top:1px solid #E4EAF2">
@@ -934,7 +837,6 @@ async function downloadPDF() {
     .join('')}
 </div>`;
 
-    // ── Page wrapper ────────────────────────────────────────────
     const wrap=(content,pg,tot)=>`
 <div style="width:${W}px;background:#F0F4F9;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#0D1B2E">
   ${pageHeader()}
@@ -958,9 +860,6 @@ async function downloadPDF() {
   ${badge?`<span style="background:${badgeColor||'#1558A8'};color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap">${badge}</span>`:''}
 </div>`;
 
-    // ════════════════════════════════════════════
-    // HALAMAN 1 — RINGKASAN
-    // ════════════════════════════════════════════
     const statCardsHtml=`
 <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
   ${[
@@ -993,7 +892,6 @@ ${statCardsHtml}
   )}
 </div>`;
 
-    // ── Render helper ───────────────────────────────────────────
     const container=document.getElementById('pdf-render');
     const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const PW=doc.internal.pageSize.getWidth();
@@ -1017,16 +915,12 @@ ${statCardsHtml}
 
     await renderPage(wrap(page1Content,1,totalPages),0);
 
-    // ════════════════════════════════════════════
-    // HALAMAN 2+ — DETAIL PER KECAMATAN
-    // ════════════════════════════════════════════
     for(let ki=0;ki<kecList.length;ki++){
       const kecName=kecList[ki];
       const kd=kecMap[kecName];
       const kecAvg=kd.sum/kd.cnt;
       const kc=sColor(kecAvg);
 
-      // Kelompokkan per kelurahan (rata-rata semua tahun)
       const kelGroupMap={};
       for(const r of kd.rows){
         if(!kelGroupMap[r.kel]) kelGroupMap[r.kel]={sum:0,cnt:0};
@@ -1047,7 +941,6 @@ ${statCardsHtml}
         return{label:cn,val:avg,color:sColor(avg)};
       });
 
-      // 6 stat cards — identik halaman 1
       const kJS=kelBarItems2.filter(r=>r.val>=100).length;
       const kJB=kelBarItems2.filter(r=>r.val>=75&&r.val<100).length;
       const kJSd=kelBarItems2.filter(r=>r.val>=50&&r.val<75).length;
@@ -1068,7 +961,6 @@ ${statCardsHtml}
     </div>`).join('')}
 </div>`;
 
-      // Tabel detail
       const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
       const tblRows=sortedRows.map((r,i)=>`
 <tr style="background:${i%2===0?'#fff':'#F8FAFD'}">
@@ -1103,7 +995,6 @@ ${statCardsHtml}
   </table>
 </div>`;
 
-      // Konten — struktur IDENTIK halaman 1
       const kecContent=`
 ${kecStatCards}
 <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
