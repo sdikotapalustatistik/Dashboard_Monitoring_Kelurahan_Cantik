@@ -276,8 +276,8 @@
         <div class="chart-card">
           <div class="card-header">
             <div>
-              <div class="card-title">Progres per Kecamatan</div>
-              <div class="card-desc">Rata-rata persentase progres pengisian tiap kecamatan</div>
+              <div class="card-title" id="kec-chart-title">Progres per Kecamatan</div>
+              <div class="card-desc" id="kec-chart-desc">Rata-rata persentase progres pengisian tiap kecamatan</div>
             </div>
             <span class="card-tag tag-blue">Diagram Batang</span>
           </div>
@@ -526,11 +526,14 @@ function renderKecChart() {
   ).values()];
 
   // Kelompokkan per kecamatan, hitung rata-rata totalProg
-  const kecMap = {};
-  for (const d of uniqueRows) {
-    if (!kecMap[d.kec]) kecMap[d.kec] = { sum: 0, count: 0 };
-    kecMap[d.kec].sum += d.totalProg;
-    kecMap[d.kec].count++;
+  const kecMap = document.getElemenById('fkel').value;
+    const groupKey = fkel ? 'kel' : 'kec' ;
+    const kecMap = {};
+    for (const d of uniqueRows) {
+      const key = d[groupKey];
+      if (!kecMap[key]) kecMap[key] = {sum: 0, count: 0};
+      kecMap[key].sum += d.totalProg;
+      kecMap[key].count++;
   }
 
   const labels = Object.keys(kecMap).sort();
