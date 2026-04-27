@@ -520,8 +520,9 @@ function renderKecChart() {
     filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
   ).values()];
 
+  const fKecValue = document.getElementById('fKec').value;
   const fKelValue = document.getElementById('fKel').value;
-  const groupKey = (fKelValue && fKelValue !== '') ? 'kel' : 'kec';
+  const groupKey = (fKecValue && fKecValue !== '') ? 'kel' : 'kec';
 
   const kecMap = {};
   for (const d of uniqueRows) {
@@ -997,4 +998,3 @@ loadAllData();
 </script>
 </body>
 </html>
-
