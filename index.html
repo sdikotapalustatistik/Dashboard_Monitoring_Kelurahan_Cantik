@@ -472,6 +472,7 @@ function buildKecFilter() {
   const sel = document.getElementById('fKec');
   const kecs = [...new Set(allData.map(d => d.kec))].sort();
   sel.innerHTML = '<option value="">Semua Kecamatan</option>' +
+    '<option value="Kota Palu">Kota Palu</option>' +
     kecs.map(k => `<option value="${k}">${k}</option>`).join('');
 }
 
@@ -538,17 +539,8 @@ function renderKecChart() {
   return Math.round(avg * 10) / 10;
 });
 
-// Tambah rata-rata Kota Palu
-  const totalSum = values.reduce((a, b) => a + b, 0);
-  const kotaAvg = Math.round((totalSum / values.length) * 10) / 10;
-  labels.push('Kota Palu');
-  values.push(kotaAvg);
-
-  const colors = values.map((v, i) => {
-  if (i === values.length - 1) return '#6D28D9'; // ungu khusus Kota Palu
-  return progColor(v);
-});
-
+  const colors = values.map(v => progColor(v));
+  
   // Update judul & deskripsi card
   const fKec = document.getElementById('fKec').value;
   const titleEl = document.getElementById('kec-chart-title');
