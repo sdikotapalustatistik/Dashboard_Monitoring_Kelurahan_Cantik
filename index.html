@@ -520,9 +520,9 @@ function renderKecChart() {
     filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
   ).values()];
 
-  const fKecValue = document.getElementById('fKec').value;
   const fKelValue = document.getElementById('fKel').value;
-  const groupKey = (fKecValue && fKecValue !== '') ? 'kel' : 'kec';
+  const fKecValue = document.getElementById('fKec').value;
+  const groupKey = 'kec';
 
   const kecMap = {};
   for (const d of uniqueRows) {
@@ -543,9 +543,9 @@ function renderKecChart() {
   const fKec = document.getElementById('fKec').value;
   const titleEl = document.getElementById('kec-chart-title');
   const descEl  = document.getElementById('kec-chart-desc');
-  if (titleEl) titleEl.textContent = fKec ? `Progres per Kelurahan — ${fKec}` : 'Progres per Kecamatan';
-  if (descEl)  descEl.textContent  = fKec
-    ? `Rata-rata progres kelurahan di ${fKec}`
+  if (titleEl) titleEl.textContent = fKelValue ? 'Progres per Kelurahan' : 'Progres per Kecamatan';
+  if (descEl)  descEl.textContent  = fKelValue
+    ? 'Rata-rata persentase progres tiap kelurahan'
     : 'Rata-rata persentase progres pengisian tiap kecamatan';
 
   if (chKec) chKec.destroy();
