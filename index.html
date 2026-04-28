@@ -472,7 +472,6 @@ function buildKecFilter() {
   const sel = document.getElementById('fKec');
   const kecs = [...new Set(allData.map(d => d.kec))].sort();
   sel.innerHTML = '<option value="">Semua Kecamatan</option>' +
-    '<option value="Kota Palu">Kota Palu</option>' +
     kecs.map(k => `<option value="${k}">${k}</option>`).join('');
 }
 
@@ -533,23 +532,11 @@ function renderKecChart() {
     kecMap[key].count++;
   }
 
-  const fKecVal = document.getElementById('fKec').value;
-let labels, values;
-
-if (fKecVal === 'Kota Palu') {
-  // Hitung rata-rata semua kecamatan
-  const allAvg = uniqueRows.reduce((s, r) => s + r.totalProg, 0) / uniqueRows.length;
-  const kotaAvg = Math.round(allAvg * 10) / 10;
-  labels = ['Kota Palu'];
-  values = [kotaAvg];
-} else {
-  labels = Object.keys(kecMap).sort();
-  values = labels.map(k => {
-    const avg = kecMap[k].sum / kecMap[k].count;
-    return Math.round(avg * 10) / 10;
-  });
-}
-
+  const labels = Object.keys(kecMap).sort();
+const values = labels.map(k => {
+  const avg = kecMap[k].sum / kecMap[k].count;
+  return Math.round(avg * 10) / 10;
+});
 const colors = values.map(v => progColor(v));
   
   // Update judul & deskripsi card
