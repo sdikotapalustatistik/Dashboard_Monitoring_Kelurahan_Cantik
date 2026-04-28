@@ -522,7 +522,7 @@ function renderKecChart() {
 
   const fKelValue = document.getElementById('fKel').value;
   const fKecValue = document.getElementById('fKec').value;
-  const groupKey = 'kec';
+  const groupKey = fKelValue ? 'kel' : 'kec';
 
   const kecMap = {};
   for (const d of uniqueRows) {
