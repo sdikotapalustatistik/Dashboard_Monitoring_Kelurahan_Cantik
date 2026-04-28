@@ -534,10 +534,20 @@ function renderKecChart() {
 
   const labels = Object.keys(kecMap).sort();
   const values = labels.map(k => {
-    const avg = kecMap[k].sum / kecMap[k].count;
-    return Math.round(avg * 10) / 10;
-  });
-  const colors = values.map(v => progColor(v));
+  const avg = kecMap[k].sum / kecMap[k].count;
+  return Math.round(avg * 10) / 10;
+});
+
+// Tambah rata-rata Kota Palu
+  const totalSum = values.reduce((a, b) => a + b, 0);
+  const kotaAvg = Math.round((totalSum / values.length) * 10) / 10;
+  labels.push('Kota Palu');
+  values.push(kotaAvg);
+
+  const colors = values.map((v, i) => {
+  if (i === values.length - 1) return '#6D28D9'; // ungu khusus Kota Palu
+  return progColor(v);
+});
 
   // Update judul & deskripsi card
   const fKec = document.getElementById('fKec').value;
