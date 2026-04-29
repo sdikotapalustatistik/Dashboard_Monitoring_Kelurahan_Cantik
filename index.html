@@ -524,10 +524,6 @@ function renderCharts() {
 // ── Chart 1: Progres per Kecamatan (Bar) ──
 function renderKecChart() {
 
-  // === TAMBAH BLOK BARU DI SINI ===
-  const fKecValue = document.getElementById('fKec').value;
-  const fKelValue = document.getElementById('fKel').value;
-
   if (fKecValue === '__KOTA_PALU__') {
     const uniqueRows = [...new Map(
       filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
