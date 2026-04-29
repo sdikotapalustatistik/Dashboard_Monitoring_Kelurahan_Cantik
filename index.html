@@ -862,19 +862,12 @@ async function downloadPDF() {
 </div>`;
 
     const statCardsHtml=`
-<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
-  ${[
-    {v:totalKel,  l:'Total Kelurahan', sub:'data tercatat',    c:'#1558A8'},
-    {v:jS,        l:'Selesai',         sub:'Progres &ge;100%', c:'#1E9E58'},
-    {v:jB,        l:'Baik',            sub:'Progres 75-99%',   c:'#1558A8'},
-    {v:jSd,       l:'Sedang',          sub:'Progres 50-74%',   c:'#F47B20'},
-    {v:jR,        l:'Rendah',          sub:'Progres &lt;50%',  c:'#e63946'},
-  ].map(i=>`
-    <div style="background:${i.c};border-radius:14px;padding:18px 12px;text-align:center;color:#fff;box-shadow:0 4px 14px ${i.c}55">
-      <div style="font-size:28px;font-weight:900;line-height:1">${i.v}</div>
-      <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">${i.l}</div>
-      <div style="font-size:10px;opacity:.75;margin-top:3px">${i.sub}</div>
-    </div>`).join('')}
+<div style="display:flex;justify-content:center;margin-bottom:18px">
+  <div style="background:#1558A8;border-radius:14px;padding:18px 40px;text-align:center;color:#fff;box-shadow:0 4px 14px #1558A855">
+    <div style="font-size:28px;font-weight:900;line-height:1">${totalKel}</div>
+    <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">Total Kelurahan</div>
+    <div style="font-size:10px;opacity:.75;margin-top:3px">data tercatat</div>
+  </div>
 </div>`;
 
     const kecBarItems=kecList.map(kn=>({label:kn,val:kecMap[kn].sum/kecMap[kn].cnt,color:sColor(kecMap[kn].sum/kecMap[kn].cnt)}));
@@ -947,19 +940,12 @@ ${statCardsHtml}
       const kJSd=kelBarItems2.filter(r=>r.val>=50&&r.val<75).length;
       const kJR=kelBarItems2.filter(r=>r.val<50).length;
       const kecStatCards=`
-<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
-  ${[
-    {v:uniqueKelNames.length, l:'Total Kelurahan', sub:'data tercatat',       c:'#1558A8'},
-    {v:kJS,  l:'Selesai', sub:'Progres \u2265100%',    c:'#1E9E58'},
-    {v:kJB,  l:'Baik',    sub:'Progres 75\u201399%',   c:'#1558A8'},
-    {v:kJSd, l:'Sedang',  sub:'Progres 50\u201374%',   c:'#F47B20'},
-    {v:kJR,  l:'Rendah',  sub:'Progres <50%',          c:'#e63946'},
-  ].map(i=>`
-    <div style="background:${i.c};border-radius:14px;padding:18px 12px;text-align:center;color:#fff;box-shadow:0 4px 14px ${i.c}55">
-      <div style="font-size:28px;font-weight:900;line-height:1">${i.v}</div>
-      <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">${i.l}</div>
-      <div style="font-size:10px;opacity:.75;margin-top:3px">${i.sub}</div>
-    </div>`).join('')}
+<div style="display:flex;justify-content:center;margin-bottom:18px">
+  <div style="background:#1558A8;border-radius:14px;padding:18px 40px;text-align:center;color:#fff;box-shadow:0 4px 14px #1558A855">
+    <div style="font-size:28px;font-weight:900;line-height:1">${uniqueKelNames.length}</div>
+    <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">Total Kelurahan</div>
+    <div style="font-size:10px;opacity:.75;margin-top:3px">data tercatat</div>
+  </div>
 </div>`;
 
       const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
