@@ -935,18 +935,27 @@ ${statCardsHtml}
         return{label:cn,val:avg,color:sColor(avg)};
       });
 
-      const kJS=kelBarItems2.filter(r=>r.val>=100).length;
-      const kJB=kelBarItems2.filter(r=>r.val>=75&&r.val<100).length;
-      const kJSd=kelBarItems2.filter(r=>r.val>=50&&r.val<75).length;
-      const kJR=kelBarItems2.filter(r=>r.val<50).length;
-      const kecStatCards=`
-<div style="display:flex;justify-content:center;margin-bottom:18px">
-  <div style="background:#1558A8;border-radius:14px;padding:18px 40px;text-align:center;color:#fff;box-shadow:0 4px 14px #1558A855">
-    <div style="font-size:28px;font-weight:900;line-height:1">${uniqueKelNames.length}</div>
-    <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">Total Kelurahan</div>
-    <div style="font-size:10px;opacity:.75;margin-top:3px">data tercatat</div>
+      // Grafik horizontal bar per kecamatan (semua kecamatan dari data filtered)
+      const allKecMap={};
+      for(const r2 of kelRows){
+        if(!allKecMap[r2.kec]) allKecMap[r2.kec]={sum:0,cnt:0};
+        allKecMap[r2.kec].sum+=r2.totalProg;
+        allKecMap[r2.kec].cnt++;
+      }
+      const allKecItems=Object.keys(allKecMap).sort().map(kn=>({
+        label:kn,
+        val:Math.round((allKecMap[kn].sum/allKecMap[kn].cnt)*10)/10,
+        color:sColor(allKecMap[kn].sum/allKecMap[kn].cnt),
+        isActive: kn===kecName
+      }));
+      const hBarKecSection=allKecItems.map(({label,val,color,isActive})=>`
+<div style="display:flex;align-items:center;gap:0;padding:7px 0;border-bottom:1px solid #F0F4F9;background:${isActive?'#FFF8F0':'transparent'}">
+  <div style="min-width:160px;text-align:right;padding-right:12px;color:${isActive?'#C45800':'#0D1B2E'};font-size:12px;font-weight:${isActive?'800':'600'}">${label}${isActive?' ◀':''}</div>
+  <div style="flex:1;background:#E4EAF2;border-radius:6px;height:20px;overflow:hidden;position:relative">
+    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px"></div>
   </div>
-</div>`;
+  <div style="min-width:60px;text-align:left;padding-left:10px;color:${color};font-size:13px;font-weight:800">${val>0?val.toFixed(1)+'%':'—'}</div>
+</div>`).join('');
 
       const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
       const tblRows=sortedRows.map((r,i)=>`
@@ -983,11 +992,14 @@ ${statCardsHtml}
 </div>`;
 
       const kecContent=`
-${kecStatCards}
-<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
+<div style="display:grid;grid-template-columns:3fr 2fr 2fr;gap:16px;margin-bottom:16px">
   ${card('#F47B20',
     cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b> | <b>Kecamatan '+kecName+'</b>'+(fKel!=='Semua'?' | <b>Kelurahan '+fKel+'</b>':'')+'<br>Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
-    vBarSection(kelBarItems2,260)+legend()
+    vBarSection(kelBarItems2,220)+legend()
+  )}
+  ${card('#1558A8',
+    cardTitle('Progres per Kecamatan','Perbandingan antar kecamatan (▶ = kecamatan ini)','Horizontal Bar','#1558A8')+
+    hBarKecSection
   )}
   ${card('#1E9E58',
     cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
