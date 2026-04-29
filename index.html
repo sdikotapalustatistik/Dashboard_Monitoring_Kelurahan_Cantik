@@ -214,6 +214,7 @@
         <div class="sf-label">🏘️ Kelurahan</div>
         <select id="fKel" onchange="applyFilters()">
           <option value="">Semua Kelurahan</option>
+          <option value="__KOTA_PALU__">Kota Palu</option>
         </select>
       </div>
 
@@ -472,17 +473,23 @@ function buildKecFilter() {
   const sel = document.getElementById('fKec');
   const kecs = [...new Set(allData.map(d => d.kec))].sort();
   sel.innerHTML = '<option value="">Semua Kecamatan</option>' +
+    '<option value="__KOTA_PALU__">Kota Palu</option>' +
     kecs.map(k => `<option value="${k}">${k}</option>`).join('');
 }
 
 function onKecChange() {
   const kec = document.getElementById('fKec').value;
   const sel = document.getElementById('fKel');
-  if (kec) {
+  if (kec === '__KOTA_PALU__') {
+    sel.innerHTML = '<option value="">Semua Kelurahan</option>';
+    sel.disabled = true;
+  } else if (kec) {
+    sel.disabled = false;
     const kels = [...new Set(allData.filter(d => d.kec === kec).map(d => d.kel))].sort();
     sel.innerHTML = '<option value="">Semua Kelurahan</option>' +
       kels.map(k => `<option value="${k}">${k}</option>`).join('');
   } else {
+    sel.disabled = false;
     sel.innerHTML = '<option value="">Semua Kelurahan</option>';
   }
   applyFilters();
@@ -495,7 +502,7 @@ function applyFilters() {
   const kat   = document.getElementById('fKat').value;
   filtered = allData.filter(d =>
     (!tahun || d.tahun == tahun) &&
-    (!kec   || d.kec === kec) &&
+    (kec === '__KOTA_PALU__' || !kec || d.kec === kec) &&
     (!kel   || d.kel === kel) &&
     (!kat   || d.kategori === kat)
   );
@@ -516,7 +523,55 @@ function renderCharts() {
 
 // ── Chart 1: Progres per Kecamatan (Bar) ──
 function renderKecChart() {
-  const uniqueRows = [...new Map(
+
+  // === TAMBAH BLOK BARU DI SINI ===
+  const fKecValue = document.getElementById('fKec').value;
+  const fKelValue = document.getElementById('fKel').value;
+
+  if (fKecValue === '__KOTA_PALU__') {
+    const uniqueRows = [...new Map(
+      filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
+    ).values()];
+    const total = uniqueRows.reduce((s, d) => s + d.totalProg, 0);
+    const avg = uniqueRows.length ? Math.round((total / uniqueRows.length) * 10) / 10 : 0;
+    const color = progColor(avg);
+
+    if (chKec) chKec.destroy();
+    const titleEl = document.getElementById('kec-chart-title');
+    const descEl  = document.getElementById('kec-chart-desc');
+    if (titleEl) titleEl.textContent = 'Progres Kota Palu';
+    if (descEl)  descEl.textContent  = 'Rata-rata persentase progres seluruh kecamatan';
+
+    chKec = new Chart(document.getElementById('cKec'), {
+      type: 'bar',
+      data: {
+        labels: ['Kota Palu'],
+        datasets: [{ label: 'Progres', data: [avg], backgroundColor: [color], borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end', align: 'top',
+            font: { size: 12, weight: '700', family: 'Sora' },
+            color: '#3D526B',
+            formatter: v => v.toFixed(1) + '%'
+          },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Sora' }, color: '#3D526B' } },
+          y: { min: 0, max: 110, grid: { color: '#E4EAF2' }, ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+    return;
+  }
+  // === AKHIR BLOK BARU ===
+
+  const uniqueRows = [...new Map(   // ← baris lama, tidak diubah, lanjut seperti biasa
     filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
   ).values()];
 
