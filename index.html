@@ -1,4 +1,4 @@
-<!-- v20260311-r6 -->
+<!-- v20260311-r7 -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -31,7 +31,6 @@
     body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
     .layout{display:flex;min-height:100vh}
 
-    /* SIDEBAR */
     aside{
       width:260px;min-height:100vh;
       background:linear-gradient(175deg,#7A3500 0%,#A84A00 40%,#C45800 100%);
@@ -72,7 +71,6 @@
     .sb-footer-txt{font-size:10px;color:rgba(255,255,255,.4);font-weight:500;line-height:1.6}
     .sb-footer-txt b{color:rgba(255,255,255,.65)}
 
-    /* MAIN */
     .content{margin-left:260px;flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .3s ease}
 
     .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
@@ -92,7 +90,6 @@
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
-    /* CHARTS */
     .charts-grid{display:grid;grid-template-columns:3fr 2fr;gap:18px;margin-bottom:18px}
     @media(max-width:1100px){.charts-grid{grid-template-columns:1fr}}
 
@@ -113,7 +110,6 @@
     .legend-item{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--text2)}
     .legend-dot{width:9px;height:9px;border-radius:3px}
 
-    /* LOADING */
     #loading{position:fixed;inset:0;background:rgba(240,244,249,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:18px;backdrop-filter:blur(4px)}
     .loader-ring{width:56px;height:56px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--orange);border-right-color:var(--green);animation:spin .9s linear infinite}
     .loader-label{font-size:13px;font-weight:600;color:var(--text2)}
@@ -122,7 +118,6 @@
     footer{text-align:center;padding:14px;font-size:11px;color:var(--text3);font-weight:600;border-top:1px solid var(--border);background:var(--surface)}
     footer b{color:var(--orange)}
 
-    /* TOGGLE SIDEBAR */
     .toggle-btn{position:fixed;top:16px;left:224px;z-index:300;width:32px;height:32px;background:#C45800;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(196,88,0,.5);transition:left .3s ease,background .15s}
     .toggle-btn:hover{background:#A84A00}
     .toggle-btn svg{transition:transform .3s}
@@ -131,10 +126,8 @@
     body.sidebar-collapsed .toggle-btn{left:12px;background:#7A3500}
     body.sidebar-collapsed .toggle-btn svg{transform:rotate(180deg)}
 
-    /* OVERLAY — mobile */
     .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;backdrop-filter:blur(2px)}
 
-    /* MOBILE */
     @media(max-width:768px){
       aside{transform:translateX(-260px);-webkit-overflow-scrolling:touch;}
       aside::-webkit-scrollbar{width:4px}
@@ -328,10 +321,11 @@ const CATS = [
   { name:'Pertanian',        p:30, t:31, g:32 },
   { name:'Lingkungan',       p:33, t:34, g:35 },
 ];
+const CAT_NAMES = CATS.map(c => c.name);
 
 // ── STATE ─────────────────────────────────────────────────────
 let allData = [], filtered = [];
-let chKec = null, chKat = null, chKota = null;
+let chKec = null, chKat = null;
 
 // ── UTILS ─────────────────────────────────────────────────────
 function progColor(v) {
@@ -357,7 +351,6 @@ function showErr(msg) {
   document.getElementById('lastSync').textContent = 'Gagal memuat';
 }
 
-// ── SIDEBAR TOGGLE ─────────────────────────────────────────────
 function toggleSidebar() {
   const isMobile = window.innerWidth <= 768;
   if (isMobile) {
@@ -367,7 +360,6 @@ function toggleSidebar() {
     setTimeout(() => {
       if (chKec) chKec.resize();
       if (chKat) chKat.resize();
-      if (chKota) chKota.resize();
     }, 320);
   }
 }
@@ -379,15 +371,12 @@ async function fetchSheet(cfg) {
   try { res = await fetch(url); } catch(e) {
     throw new Error(`Tidak bisa terhubung ke internet atau Google Sheets diblokir. (${e.message})`);
   }
-  if (!res.ok) throw new Error(`HTTP ${res.status} saat mengambil sheet "${cfg.name}". Pastikan sheet sudah dipublikasikan.`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} saat mengambil sheet "${cfg.name}".`);
   const txt = await res.text();
-  if (txt.includes('"errors"') && !txt.includes('google.visualization')) {
-    throw new Error(`Google Sheets menolak akses sheet "${cfg.name}". Pastikan sheet dipublikasikan ke web dan nama tab persis sama.`);
-  }
   const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);
-  if (!match) throw new Error(`Format respons tidak valid dari sheet "${cfg.name}". Cek nama tab sheet — harus persis: "Bantu Hitung 2024", "Bantu Hitung 2025", "Bantu Hitung 2026".`);
+  if (!match) throw new Error(`Format respons tidak valid dari sheet "${cfg.name}".`);
   const json = JSON.parse(match[1]);
-  if (!json.table || !json.table.rows) throw new Error(`Sheet "${cfg.name}" kosong atau strukturnya tidak sesuai.`);
+  if (!json.table || !json.table.rows) throw new Error(`Sheet "${cfg.name}" kosong.`);
 
   const out = [];
   let lastKec = '';
@@ -395,16 +384,13 @@ async function fetchSheet(cfg) {
   for (const row of json.table.rows) {
     if (!row?.c) continue;
     const c = row.c;
-
     const noRaw = c[0]?.v;
     if (noRaw === null || noRaw === undefined) continue;
     const noNum = parseFloat(noRaw);
     if (isNaN(noNum) || noNum <= 0) continue;
-
     const kel = c[2]?.v ? String(c[2].v).trim() : '';
     if (!kel) continue;
     if (['kelurahan','no','nama'].includes(kel.toLowerCase())) continue;
-
     const kecRaw = c[1]?.v ? String(c[1].v).trim() : '';
     if (kecRaw) lastKec = kecRaw;
     if (!lastKec) continue;
@@ -412,22 +398,18 @@ async function fetchSheet(cfg) {
     const totalPeng = parseFloat(c[3]?.v) || 0;
     const totalTgt  = parseFloat(c[4]?.v) || 0;
     let totalProgRaw = parseFloat(c[5]?.v) || 0;
-    const totalProg = totalProgRaw > 0 && totalProgRaw <= 1.5
-      ? totalProgRaw * 100
-      : totalProgRaw;
+    const totalProg = totalProgRaw > 0 && totalProgRaw <= 1.5 ? totalProgRaw * 100 : totalProgRaw;
 
     for (const cat of CATS) {
       const peng = parseFloat(c[cat.p]?.v) || 0;
       const tgt  = parseFloat(c[cat.t]?.v) || 0;
       let progRaw = parseFloat(c[cat.g]?.v) || 0;
       const prog = progRaw > 0 && progRaw <= 1.5 ? progRaw * 100 : progRaw;
-
       out.push({
         kec: lastKec, kel, tahun: cfg.year,
         kategori: cat.name,
         pengisian: peng, target: tgt, progres: prog,
-        totalPeng, totalTgt, totalProg,
-        no: noNum
+        totalPeng, totalTgt, totalProg, no: noNum
       });
     }
   }
@@ -447,7 +429,7 @@ async function loadAllData() {
       allData = allData.concat(await fetchSheet(cfg));
     }
     if (allData.length === 0) {
-      showErr('Data berhasil diambil tapi kosong. Kemungkinan struktur kolom sheet berbeda dari yang diharapkan.');
+      showErr('Data berhasil diambil tapi kosong.');
       return;
     }
     buildKecFilter();
@@ -475,9 +457,7 @@ function buildKecFilter() {
 function onKecChange() {
   const kec = document.getElementById('fKec').value;
   const sel = document.getElementById('fKel');
-
   if (kec === '__KOTA_PALU__') {
-    // Kota Palu: kosongkan & nonaktifkan dropdown kelurahan
     sel.innerHTML = '<option value="">Semua Kelurahan</option>';
     sel.disabled = true;
   } else if (kec) {
@@ -500,7 +480,6 @@ function applyFilters() {
 
   filtered = allData.filter(d =>
     (!tahun || d.tahun == tahun) &&
-    // Kota Palu = ambil semua kecamatan (tidak filter per kecamatan)
     (kec === '__KOTA_PALU__' || !kec || d.kec === kec) &&
     (!kel   || d.kel === kel) &&
     (!kat   || d.kategori === kat)
@@ -523,185 +502,377 @@ function renderCharts() {
   renderKatChart();
 }
 
-// ── Chart 1: Progres per Kecamatan (Bar) ──
 function renderKecChart() {
-  // Baca nilai filter di paling atas — harus sebelum dipakai
   const fKecValue = document.getElementById('fKec').value;
   const fKelValue = document.getElementById('fKel').value;
-
   const titleEl = document.getElementById('kec-chart-title');
   const descEl  = document.getElementById('kec-chart-desc');
 
-  // ── KOTA PALU: tampilkan 1 bar rata-rata seluruh kecamatan ──
   if (fKecValue === '__KOTA_PALU__') {
-    const uniqueRows = [...new Map(
-      filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
-    ).values()];
+    const uniqueRows = [...new Map(filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])).values()];
     const total = uniqueRows.reduce((s, d) => s + d.totalProg, 0);
     const avg = uniqueRows.length ? Math.round((total / uniqueRows.length) * 10) / 10 : 0;
     const color = progColor(avg);
-
     if (titleEl) titleEl.textContent = 'Progres Kota Palu';
     if (descEl)  descEl.textContent  = 'Rata-rata persentase progres seluruh kecamatan';
-
     if (chKec) chKec.destroy();
     chKec = new Chart(document.getElementById('cKec'), {
       type: 'bar',
-      data: {
-        labels: ['Kota Palu'],
-        datasets: [{
-          label: 'Progres',
-          data: [avg],
-          backgroundColor: [color],
-          borderRadius: 6,
-          borderSkipped: false,
-        }]
-      },
+      data: { labels: ['Kota Palu'], datasets: [{ label: 'Progres', data: [avg], backgroundColor: [color], borderRadius: 6, borderSkipped: false }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          datalabels: {
-            anchor: 'end', align: 'top',
-            font: { size: 14, weight: '700', family: 'Sora' },
-            color: '#3D526B',
-            formatter: v => v.toFixed(1) + '%'
-          },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } }
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 12, family: 'Sora' }, color: '#3D526B' } },
-          y: { min: 0, max: 110, grid: { color: '#E4EAF2' }, ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' } }
-        }
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { size: 14, weight: '700', family: 'Sora' }, color: '#3D526B', formatter: v => v.toFixed(1) + '%' }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } } },
+        scales: { x: { grid: { display: false }, ticks: { font: { size: 12, family: 'Sora' }, color: '#3D526B' } }, y: { min: 0, max: 110, grid: { color: '#E4EAF2' }, ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' } } }
       },
       plugins: [ChartDataLabels]
     });
-    return; // selesai, tidak lanjut ke logika normal
+    return;
   }
 
-  // ── NORMAL: per kecamatan atau per kelurahan ──
-  const uniqueRows = [...new Map(
-    filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])
-  ).values()];
-
+  const uniqueRows = [...new Map(filtered.map(d => [`${d.kec}||${d.kel}||${d.tahun}`, d])).values()];
   const groupKey = fKelValue ? 'kel' : 'kec';
-
   const kecMap = {};
   for (const d of uniqueRows) {
     const key = d[groupKey];
     if (!kecMap[key]) kecMap[key] = { sum: 0, count: 0 };
-    kecMap[key].sum += d.totalProg;
-    kecMap[key].count++;
+    kecMap[key].sum += d.totalProg; kecMap[key].count++;
   }
-
   const labels = Object.keys(kecMap).sort();
-  const values = labels.map(k => {
-    const avg = kecMap[k].sum / kecMap[k].count;
-    return Math.round(avg * 10) / 10;
-  });
+  const values = labels.map(k => Math.round((kecMap[k].sum / kecMap[k].count) * 10) / 10);
   const colors = values.map(v => progColor(v));
-
   if (titleEl) titleEl.textContent = fKelValue ? 'Progres per Kelurahan' : 'Progres per Kecamatan';
-  if (descEl)  descEl.textContent  = fKelValue
-    ? 'Rata-rata persentase progres tiap kelurahan'
-    : 'Rata-rata persentase progres pengisian tiap kecamatan';
-
+  if (descEl)  descEl.textContent  = fKelValue ? 'Rata-rata persentase progres tiap kelurahan' : 'Rata-rata persentase progres pengisian tiap kecamatan';
   if (chKec) chKec.destroy();
   chKec = new Chart(document.getElementById('cKec'), {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Progres',
-        data: values,
-        backgroundColor: colors,
-        borderRadius: 6,
-        borderSkipped: false,
-      }]
-    },
+    data: { labels, datasets: [{ label: 'Progres', data: values, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          anchor: 'end', align: 'top',
-          font: { size: 10, weight: '700', family: 'Sora' },
-          color: '#3D526B',
-          formatter: v => v.toFixed(1) + '%'
-        },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Sora' }, color: '#3D526B' } },
-        y: {
-          min: 0, max: 110,
-          grid: { color: '#E4EAF2' },
-          ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' }
-        }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { size: 10, weight: '700', family: 'Sora' }, color: '#3D526B', formatter: v => v.toFixed(1) + '%' }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Sora' }, color: '#3D526B' } }, y: { min: 0, max: 110, grid: { color: '#E4EAF2' }, ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' } } }
     },
     plugins: [ChartDataLabels]
   });
 }
 
-// ── Chart 2: Progres per Kategori (Horizontal Bar) ──
 function renderKatChart() {
   const katMap = {};
   for (const d of filtered) {
     if (!katMap[d.kategori]) katMap[d.kategori] = { sum: 0, count: 0 };
-    katMap[d.kategori].sum += d.progres;
-    katMap[d.kategori].count++;
+    katMap[d.kategori].sum += d.progres; katMap[d.kategori].count++;
   }
-
   const labels = Object.keys(katMap);
-  const values = labels.map(k => {
-    const avg = katMap[k].sum / katMap[k].count;
-    return Math.round(avg * 10) / 10;
-  });
+  const values = labels.map(k => Math.round((katMap[k].sum / katMap[k].count) * 10) / 10);
   const colors = values.map(v => progColor(v));
-
   if (chKat) chKat.destroy();
   chKat = new Chart(document.getElementById('cKat'), {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors,
-        borderRadius: 5,
-        borderSkipped: false,
-      }]
-    },
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
     options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          anchor: 'end', align: 'right',
-          font: { size: 10, weight: '700', family: 'Sora' },
-          color: '#3D526B',
-          formatter: v => v.toFixed(1) + '%'
-        },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } }
-      },
-      scales: {
-        x: {
-          min: 0, max: 110,
-          grid: { color: '#E4EAF2' },
-          ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' }
-        },
-        y: { grid: { display: false }, ticks: { font: { size: 10, family: 'Sora' }, color: '#3D526B' } }
-      }
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: { size: 10, weight: '700', family: 'Sora' }, color: '#3D526B', formatter: v => v.toFixed(1) + '%' }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toFixed(1)}%` } } },
+      scales: { x: { min: 0, max: 110, grid: { color: '#E4EAF2' }, ticks: { font: { size: 10, family: 'Sora' }, color: '#8A9DB8', callback: v => v + '%' } }, y: { grid: { display: false }, ticks: { font: { size: 10, family: 'Sora' }, color: '#3D526B' } } }
     },
     plugins: [ChartDataLabels]
   });
 }
 
-// ── DOWNLOAD PDF ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// ── PDF GENERATOR ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+
+// ── Helper: bangun kelMap dari data ──
+function buildKelMap(data) {
+  const kelMap = new Map();
+  for (const d of data) {
+    const key = `${d.kec}||${d.kel}||${d.tahun}`;
+    if (!kelMap.has(key)) kelMap.set(key, { kec: d.kec, kel: d.kel, tahun: d.tahun, totalPeng: d.totalPeng, totalTgt: d.totalTgt, totalProg: d.totalProg, cats: {} });
+    kelMap.get(key).cats[d.kategori] = { peng: d.pengisian, tgt: d.target, prog: d.progres };
+  }
+  return [...kelMap.values()].sort((a,b) => a.kec.localeCompare(b.kec) || a.kel.localeCompare(b.kel) || a.tahun - b.tahun);
+}
+
+// ── Helper: hitung rata-rata progres dari kelRows ──
+function calcAvgProg(rows) {
+  if (!rows.length) return 0;
+  return rows.reduce((s,r) => s + r.totalProg, 0) / rows.length;
+}
+
+// ── Helper: hitung rata-rata kategori dari kelRows ──
+function calcCatAvg(rows) {
+  const catAvg = {};
+  for (const cn of CAT_NAMES) catAvg[cn] = { sum: 0, cnt: 0 };
+  for (const r of rows) for (const cn of CAT_NAMES) { catAvg[cn].sum += r.cats[cn]?.prog || 0; catAvg[cn].cnt++; }
+  return catAvg;
+}
+
+// ── Color helper untuk PDF ──
+const sColor = v => v >= 100 ? '#1E9E58' : v >= 75 ? '#1558A8' : v >= 50 ? '#F47B20' : '#e63946';
+
+// ─────────────────────────────────────────────────────────────
+// SVG PIE CHART BUILDER
+// v: nilai progres (0–100)
+// size: ukuran SVG (px)
+// label: teks di tengah
+// ─────────────────────────────────────────────────────────────
+function buildPieSVG(v, size, label, subLabel) {
+  const pct = Math.min(Math.max(v, 0), 100);
+  const color = sColor(v);
+  const bg = '#E4EAF2';
+  const cx = size / 2, cy = size / 2;
+  const r = size * 0.38;
+  const stroke = size * 0.12;
+  const circumference = 2 * Math.PI * r;
+  const dashArray = (pct / 100) * circumference;
+  const dashOffset = circumference * 0.25; // mulai dari atas
+
+  // Arc path untuk pie (lebih estetik dengan stroke-dasharray pada circle)
+  const mainFontSize = Math.round(size * 0.14);
+  const subFontSize = Math.round(size * 0.065);
+  const labelFontSize = Math.round(size * 0.07);
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow-${Math.round(v*10)}" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="${color}" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background ring -->
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${bg}" stroke-width="${stroke}"/>
+  <!-- Progress ring -->
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+    stroke-dasharray="${dashArray} ${circumference}"
+    stroke-dashoffset="-${dashOffset}"
+    stroke-linecap="round"
+    filter="url(#shadow-${Math.round(v*10)})"
+    transform="rotate(-90 ${cx} ${cy})"/>
+  <!-- Center text: persen -->
+  <text x="${cx}" y="${cy - subFontSize * 0.3}" text-anchor="middle" dominant-baseline="middle"
+    font-family="'Segoe UI',Arial,sans-serif" font-size="${mainFontSize}" font-weight="900" fill="${color}">${pct.toFixed(1)}%</text>
+  ${subLabel ? `<text x="${cx}" y="${cy + mainFontSize * 0.7}" text-anchor="middle" dominant-baseline="middle"
+    font-family="'Segoe UI',Arial,sans-serif" font-size="${subFontSize}" font-weight="600" fill="#8A9DB8">${subLabel}</text>` : ''}
+  ${label ? `<text x="${cx}" y="${size - labelFontSize * 0.8}" text-anchor="middle" dominant-baseline="middle"
+    font-family="'Segoe UI',Arial,sans-serif" font-size="${labelFontSize}" font-weight="700" fill="#3D526B">${label}</text>` : ''}
+</svg>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// KOMPONEN HTML UNTUK PDF
+// ─────────────────────────────────────────────────────────────
+
+const W = 1122;
+
+function pageHeader(tgl, logoSrc, logoSrc2) {
+  return `<div style="background:linear-gradient(90deg,#C45800,#A84A00);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid #FFD580">
+  <div style="display:flex;align-items:center;gap:16px">
+    ${logoSrc ? `<img src="${logoSrc}" style="height:52px;width:auto;object-fit:contain"/>` : ''}
+    <div>
+      <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px">Dashboard Monitoring Progres Kelurahan</div>
+      <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota Palu</div>
+    </div>
+    ${logoSrc2 ? `<img src="${logoSrc2}" style="height:52px;width:auto;object-fit:contain"/>` : ''}
+  </div>
+  <div style="text-align:right">
+    <div style="color:rgba(255,255,255,.7);font-size:11px">Dicetak:</div>
+    <div style="color:#fff;font-size:13px;font-weight:700">${tgl}</div>
+  </div>
+</div>`;
+}
+
+function filterBar(fTahun, fKec, fKel, fKat) {
+  return `<div style="background:#FFF3E0;border-left:4px solid #C45800;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0">
+  <span style="color:#A84A00;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">Filter Aktif</span>
+  <span style="color:#ccc">|</span>
+  ${[`Tahun: ${fTahun}`,`Kecamatan: ${fKec}`,`Kelurahan: ${fKel}`,`Kategori: ${fKat}`]
+    .map(p => `<span style="background:#C45800;color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px">${p}</span>`)
+    .join('')}
+</div>`;
+}
+
+function pageFooter(pg, tot) {
+  return `<div style="background:#7A3500;padding:9px 24px;display:flex;justify-content:space-between;align-items:center">
+  <span style="color:rgba(255,255,255,.6);font-size:11px">&copy; 2026 Badan Pusat Statistik Kota Palu &mdash; SDI Kota Palu</span>
+  <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Halaman ${pg} dari ${tot}</span>
+</div>`;
+}
+
+function wrapPage(content, pg, tot, tgl, logoSrc, logoSrc2, fTahun, fKec, fKel, fKat) {
+  return `<div style="width:${W}px;background:#F0F4F9;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#0D1B2E">
+  ${pageHeader(tgl, logoSrc, logoSrc2)}
+  ${filterBar(fTahun, fKec, fKel, fKat)}
+  <div style="padding:16px 20px 20px">${content}</div>
+  ${pageFooter(pg, tot)}
+</div>`;
+}
+
+// Kartu section dengan accent bar
+function card(accentColor, content, extraStyle) {
+  return `<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);${extraStyle || ''}">
+  <div style="height:5px;background:${accentColor}"></div>
+  <div style="padding:18px 20px">${content}</div>
+</div>`;
+}
+
+function cardTitle(title, desc, badge, badgeColor) {
+  return `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+  <div>
+    <div style="font-size:15px;font-weight:800;color:#0D1B2E">${title}</div>
+    ${desc ? `<div style="font-size:12px;color:#3D526B;margin-top:3px">${desc}</div>` : ''}
+  </div>
+  ${badge ? `<span style="background:${badgeColor || '#1558A8'};color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap">${badge}</span>` : ''}
+</div>`;
+}
+
+// Horizontal bar section untuk kategori
+function hBarSection(items) {
+  return `<div style="padding:4px 0">` +
+    items.map(({label, val, color}) => `
+<div style="padding:5px 0;border-bottom:1px solid #F0F4F9">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <span style="color:#0D1B2E;font-size:11px;font-weight:600">${label}</span>
+    <span style="color:${color};font-size:11px;font-weight:800;margin-left:8px;white-space:nowrap">${val > 0 ? val.toFixed(1) + '%' : '—'}</span>
+  </div>
+  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:16px;overflow:hidden">
+    <div style="width:${Math.min(val, 100)}%;background:${color};height:100%;border-radius:6px"></div>
+  </div>
+</div>`).join('') + `</div>`;
+}
+
+// Vertikal bar section
+function vBarSection(items, chartH) {
+  chartH = chartH || 220;
+  const maxV = Math.max(...items.map(x => x.val), 100);
+  const scale = chartH / maxV;
+  const yAxisW = 40;
+  const gap = 4;
+  const barW = Math.max(14, Math.min(46, Math.floor((540 - yAxisW - gap * items.length) / items.length)));
+
+  const yAxis = `<div style="width:${yAxisW}px;flex-shrink:0;position:relative;height:${chartH}px;">
+    ${[0,25,50,75,100].map(pct => {
+      const bot = Math.round(pct * scale);
+      return `<div style="position:absolute;bottom:${bot}px;right:5px;color:#8A9DB8;font-size:9px;font-weight:700;transform:translateY(50%);white-space:nowrap;line-height:1">${pct}%</div>`;
+    }).join('')}
+    <div style="position:absolute;top:0;bottom:-2px;right:0;border-right:2px solid #CBD5E1"></div>
+  </div>`;
+
+  const gridLines = [25,50,75,100].map(pct => {
+    const bot = Math.round(pct * scale);
+    return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;border-top:1px dashed ${pct===100?'#2563EB30':'#E4EAF2'};pointer-events:none"></div>`;
+  }).join('');
+
+  const barEls = items.map(({val, color}) => {
+    const h = Math.max(3, Math.round(val * scale));
+    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:${barW}px;height:${chartH}px;flex-shrink:0">
+      <div style="color:${color};font-size:8px;font-weight:800;margin-bottom:2px;white-space:nowrap">${val.toFixed(1)}%</div>
+      <div style="width:100%;height:${h}px;background:${color};border-radius:4px 4px 0 0;box-shadow:0 2px 5px ${color}55;flex-shrink:0"></div>
+    </div>`;
+  }).join('');
+
+  const plotArea = `<div style="flex:1;position:relative;height:${chartH}px;border-bottom:2px solid #CBD5E1;overflow:visible;padding:0 6px">
+    ${gridLines}
+    <div style="display:flex;align-items:flex-end;gap:${gap}px;height:100%;position:absolute;bottom:0;left:6px;right:6px">${barEls}</div>
+  </div>`;
+
+  const xLabelEls = items.map(({label}) => {
+    const words = label.split(' ');
+    const shortLabel = words.length > 1 ? words[0] + '<br>' + words.slice(1).join(' ') : label;
+    return `<div style="width:${barW}px;flex-shrink:0;text-align:center;color:#3D526B;font-size:8px;line-height:1.3">${shortLabel}</div>`;
+  }).join('');
+
+  return `<div style="padding:10px 0 0">
+    <div style="display:flex;align-items:flex-end">${yAxis}${plotArea}</div>
+    <div style="display:flex;gap:${gap}px;margin-left:${yAxisW}px;padding:5px 6px 0;box-sizing:border-box">${xLabelEls}</div>
+  </div>`;
+}
+
+function legendHtml() {
+  return `<div style="display:flex;gap:18px;margin-top:14px;padding-top:10px;border-top:1px solid #E4EAF2">
+  ${[['#1E9E58','&ge; 100%'],['#1558A8','75&ndash;99%'],['#F47B20','50&ndash;74%'],['#e63946','&lt; 50%']]
+    .map(([c,l]) => `<div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:${c}"></div><span style="font-size:11px;color:#3D526B;font-weight:600">${l}</span></div>`)
+    .join('')}
+</div>`;
+}
+
+// Pie + Kategori layout (digunakan di berbagai mode)
+function pieAndKatLayout(pieTitle, pieDesc, pieVal, pieBadge, pieBadgeColor, catItems, pieSize) {
+  pieSize = pieSize || 220;
+  const pieSvg = buildPieSVG(pieVal, pieSize, '', 'progres');
+  const color = sColor(pieVal);
+
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  ${card('#F47B20', `
+    ${cardTitle(pieTitle, pieDesc, pieBadge || 'Pie Chart', pieBadgeColor || '#F47B20')}
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0">
+      ${pieSvg}
+      <div style="margin-top:16px;text-align:center">
+        <div style="font-size:28px;font-weight:900;color:${color};line-height:1">${pieVal.toFixed(1)}%</div>
+        <div style="font-size:12px;color:#8A9DB8;font-weight:600;margin-top:4px">Rata-rata Progres</div>
+      </div>
+      ${legendHtml()}
+    </div>
+  `)}
+  ${card('#1E9E58', `
+    ${cardTitle('Rata-rata per Kategori', 'Progres berdasarkan kategori data', 'Horizontal Bar', '#1E9E58')}
+    ${hBarSection(catItems)}
+  `)}
+</div>`;
+}
+
+// Tabel detail kelurahan
+function tabelDetailHtml(rows, kecName) {
+  const tblRows = rows.map((r, i) => `
+<tr style="background:${i%2===0?'#fff':'#F8FAFD'}">
+  <td style="padding:7px 10px;color:#8A9DB8;font-size:10px;text-align:center;border-right:1px solid #E4EAF2">${i+1}</td>
+  <td style="padding:7px 12px;font-weight:700;font-size:11px;border-right:1px solid #E4EAF2">${r.kel}</td>
+  <td style="padding:7px 8px;text-align:center;font-size:10px;color:#5A7290;border-right:1px solid #E4EAF2">${r.tahun}</td>
+  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalPeng.toLocaleString('id')}</td>
+  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalTgt.toLocaleString('id')}</td>
+  <td style="padding:7px 8px;text-align:center;font-weight:900;font-size:12px;color:${sColor(r.totalProg)};background:${sColor(r.totalProg)}15;border-right:1px solid #E4EAF2">${r.totalProg.toFixed(1)}%</td>
+  ${CAT_NAMES.map(cn => `<td style="padding:7px 5px;text-align:center;font-size:9px;color:${sColor(r.cats[cn]?.prog||0)};font-weight:700;border-right:1px solid #F0F4F9">${(r.cats[cn]?.prog||0).toFixed(1)}%</td>`).join('')}
+</tr>`).join('');
+
+  return `<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-top:16px">
+  <div style="background:linear-gradient(90deg,#7A3500,#A84A00);padding:12px 20px">
+    <span style="color:#fff;font-size:14px;font-weight:800">Detail Data Kelurahan${kecName ? ' — ' + kecName : ''} &mdash; Semua 10 Kategori</span>
+  </div>
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:#A84A00">
+        <th style="padding:9px 10px;color:#fff;font-size:10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">No</th>
+        <th style="padding:9px 12px;color:#fff;font-size:10px;text-align:left;border-right:1px solid rgba(255,255,255,.1);min-width:110px">Kelurahan</th>
+        <th style="padding:9px 8px;color:#fff;font-size:10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Thn</th>
+        <th style="padding:9px 10px;color:#fff;font-size:10px;text-align:right;border-right:1px solid rgba(255,255,255,.1)">Pengisian</th>
+        <th style="padding:9px 10px;color:#fff;font-size:10px;text-align:right;border-right:1px solid rgba(255,255,255,.1)">Target</th>
+        <th style="padding:9px 8px;color:#fff;font-size:10px;text-align:center;border-right:1px solid rgba(255,255,255,.1);background:#7A3500">Total %</th>
+        ${CAT_NAMES.map(cn => `<th style="padding:9px 5px;color:#FFD580;font-size:9px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.07);white-space:nowrap">${cn}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>${tblRows}</tbody>
+  </table>
+</div>`;
+}
+
+// ── RENDER PAGE ke PDF ──
+async function renderPageToPDF(doc, htmlContent, W, PW, PH, pageIdx) {
+  const container = document.getElementById('pdf-render');
+  container.style.cssText = `position:fixed;left:0;top:0;z-index:99999;width:${W}px;background:#F0F4F9;`;
+  container.innerHTML = htmlContent;
+  await new Promise(r => setTimeout(r, 400));
+  const canvas = await html2canvas(container, {
+    scale: 2, useCORS: true, allowTaint: true,
+    width: W, height: container.scrollHeight,
+    windowWidth: W, logging: false, backgroundColor: '#F0F4F9'
+  });
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;width:1122px;';
+  container.innerHTML = '';
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  if (pageIdx > 0) doc.addPage();
+  doc.addImage(imgData, 'JPEG', 0, 0, PW, PH);
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN DOWNLOAD PDF
+// ══════════════════════════════════════════════════════════════
 async function downloadPDF() {
   if (!filtered.length) return alert('Tidak ada data untuk diunduh. Coba ubah filter.');
 
@@ -711,335 +882,248 @@ async function downloadPDF() {
   try {
     const { jsPDF } = window.jspdf;
     const now = new Date();
-    const ts  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-    const tgl = now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) +
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const tgl = now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }) +
                 ' pukul ' + String(now.getHours()).padStart(2,'0') + '.' + String(now.getMinutes()).padStart(2,'0');
 
-    const fTahun = document.getElementById('fTahun').value || 'Semua';
-    const fKecRaw = document.getElementById('fKec').value;
+    const fTahunVal = document.getElementById('fTahun').value;
+    const fKecRaw   = document.getElementById('fKec').value;
+    const fKelVal   = document.getElementById('fKel').value;
+    const fKatVal   = document.getElementById('fKat').value;
+
+    const fTahun = fTahunVal || 'Semua';
     const fKec   = fKecRaw === '__KOTA_PALU__' ? 'Kota Palu' : (fKecRaw || 'Semua');
-    const fKel   = document.getElementById('fKel').value   || 'Semua';
-    const fKat   = document.getElementById('fKat').value   || 'Semua';
-    const CAT_NAMES = ['Umum','Sumber Daya Alam','Pemerintahan','Penduduk','Pendidikan','Kesehatan','Sosial','Ekonomi','Pertanian','Lingkungan'];
+    const fKel   = fKelVal   || 'Semua';
+    const fKat   = fKatVal   || 'Semua';
 
-    const kelMap = new Map();
-    for (const d of filtered) {
-      const key = `${d.kec}||${d.kel}||${d.tahun}`;
-      if (!kelMap.has(key)) kelMap.set(key,{kec:d.kec,kel:d.kel,tahun:d.tahun,totalPeng:d.totalPeng,totalTgt:d.totalTgt,totalProg:d.totalProg,cats:{}});
-      kelMap.get(key).cats[d.kategori]={peng:d.pengisian,tgt:d.target,prog:d.progres};
-    }
-    const kelRows = [...kelMap.values()].sort((a,b)=>a.kec.localeCompare(b.kec)||a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
-    const kecMap = {};
-    for (const r of kelRows) {
-      if (!kecMap[r.kec]) kecMap[r.kec]={sum:0,cnt:0,rows:[]};
-      kecMap[r.kec].sum+=r.totalProg; kecMap[r.kec].cnt++; kecMap[r.kec].rows.push(r);
-    }
-    const catAvg = {};
-    for (const cn of CAT_NAMES) catAvg[cn]={sum:0,cnt:0};
-    for (const r of kelRows) for (const cn of CAT_NAMES){catAvg[cn].sum+=r.cats[cn]?.prog||0;catAvg[cn].cnt++;}
+    // Ambil logo
+    let logoSrc = '', logoSrc2 = '';
+    try {
+      const imgs = document.querySelectorAll('.sb-brand img');
+      if (imgs[0]) logoSrc  = imgs[0].currentSrc || imgs[0].src;
+      if (imgs[1]) logoSrc2 = imgs[1].currentSrc || imgs[1].src;
+    } catch(e) {}
 
-    const sColor = v => v>=100?'#1E9E58':v>=75?'#1558A8':v>=50?'#F47B20':'#e63946';
-    const totalKel=kelRows.length;
-    const jS=kelRows.filter(r=>r.totalProg>=100).length;
-    const jB=kelRows.filter(r=>r.totalProg>=75&&r.totalProg<100).length;
-    const jSd=kelRows.filter(r=>r.totalProg>=50&&r.totalProg<75).length;
-    const jR=kelRows.filter(r=>r.totalProg<50).length;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const PW = doc.internal.pageSize.getWidth();
+    const PH = doc.internal.pageSize.getHeight();
 
-    let logoSrc='', logoSrc2='';
-    try{
-      const imgs=document.querySelectorAll('.sb-brand img');
-      if(imgs[0]) logoSrc=imgs[0].currentSrc||imgs[0].src;
-      if(imgs[1]) logoSrc2=imgs[1].currentSrc||imgs[1].src;
-      if(logoSrc2) logoSrc2=logoSrc2.split('?')[0]+'?v='+Date.now();
-    }catch(e){}
+    // Shared render fn
+    const renderPage = async (html, idx) => renderPageToPDF(doc, html, W, PW, PH, idx);
+    const wp = (content, pg, tot) => wrapPage(content, pg, tot, tgl, logoSrc, logoSrc2, fTahun, fKec, fKel, fKat);
 
-    const W=1122;
-    const kecList=Object.keys(kecMap).sort();
-    const totalPages=1+kecList.length;
+    // Bangun kelRows dari filtered
+    const kelRows = buildKelMap(filtered);
 
-    const pageHeader=()=>`
-<div style="background:linear-gradient(90deg,#C45800,#A84A00);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid #FFD580">
-  <div style="display:flex;align-items:center;gap:16px">
-    ${logoSrc?`<img src="${logoSrc}" style="height:52px;width:auto;object-fit:contain"/>`:''}
-    <div>
-      <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 1px 3px rgba(0,0,0,.2)">Dashboard Monitoring Progres Kelurahan</div>
-      <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:3px;font-weight:500">SDI Kota Palu &nbsp;|&nbsp; Pengelola SDI Kota Palu</div>
-    </div>
-    ${logoSrc2?`<img src="${logoSrc2}" style="height:52px;width:auto;object-fit:contain"/>`:''}
-  </div>
-  <div style="text-align:right">
-    <div style="color:rgba(255,255,255,.7);font-size:11px">Dicetak:</div>
-    <div style="color:#fff;font-size:13px;font-weight:700">${tgl}</div>
-  </div>
-</div>`;
-
-    const filterBar=()=>`
-<div style="background:#FFF3E0;border-left:4px solid #C45800;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0">
-  <span style="color:#A84A00;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">Filter Aktif</span>
-  <span style="color:#ccc">|</span>
-  ${[`Tahun: ${fTahun}`,`Kecamatan: ${fKec}`,`Kelurahan: ${fKel}`,`Kategori: ${fKat}`]
-    .map(p=>`<span style="background:#C45800;color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px">${p}</span>`)
-    .join('')}
-</div>`;
-
-    const pageFooter=(pg,tot)=>`
-<div style="background:#7A3500;padding:9px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span style="color:rgba(255,255,255,.6);font-size:11px">&copy; 2026 Badan Pusat Statistik Kota Palu &mdash; SDI Kota Palu</span>
-  <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Halaman ${pg} dari ${tot}</span>
-</div>`;
-
-    const hBarSection=(items)=>`<div style="padding:4px 0">`+items.map(({label,val,color})=>`
-<div style="padding:5px 0;border-bottom:1px solid #F0F4F9">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <span style="color:#0D1B2E;font-size:11px;font-weight:600">${label}</span>
-    <span style="color:${color};font-size:11px;font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
-  </div>
-  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:16px;overflow:hidden">
-    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px"></div>
-  </div>
-</div>`).join('')+`</div>`;
-
-    const vBarSection=(items,chartH=180)=>{
-      const maxV=Math.max(...items.map(x=>x.val),100);
-      const scale=chartH/maxV;
-      const yAxisW=40;
-      const gap=4;
-      const totalBars=items.length;
-      const barW=Math.max(14,Math.min(46,Math.floor((540-yAxisW-gap*totalBars)/totalBars)));
-
-      // Y-axis label column (kiri)
-      const yAxis=`<div style="width:${yAxisW}px;flex-shrink:0;position:relative;height:${chartH}px;">
-        ${[0,25,50,75,100].map(pct=>{
-          const bot=Math.round(pct*scale);
-          return `<div style="position:absolute;bottom:${bot}px;right:5px;color:#8A9DB8;font-size:9px;font-weight:700;transform:translateY(50%);white-space:nowrap;line-height:1">${pct}%</div>`;
-        }).join('')}
-        <!-- border kanan Y-axis -->
-        <div style="position:absolute;top:0;bottom:-2px;right:0;border-right:2px solid #CBD5E1"></div>
-      </div>`;
-
-      // Plot area
-      const gridLines=[25,50,75,100].map(pct=>{
-        const bot=Math.round(pct*scale);
-        return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;border-top:1px dashed ${pct===100?'#2563EB30':'#E4EAF2'};pointer-events:none"></div>`;
-      }).join('');
-
-      const barEls=items.map(({val,color})=>{
-        const h=Math.max(3,Math.round(val*scale));
-        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:${barW}px;height:${chartH}px;flex-shrink:0">
-          <div style="color:${color};font-size:8px;font-weight:800;margin-bottom:2px;white-space:nowrap">${val.toFixed(1)}%</div>
-          <div style="width:100%;height:${h}px;background:${color};border-radius:4px 4px 0 0;box-shadow:0 2px 5px ${color}55;flex-shrink:0"></div>
-        </div>`;
-      }).join('');
-
-      const plotArea=`<div style="flex:1;position:relative;height:${chartH}px;border-bottom:2px solid #CBD5E1;overflow:visible;padding:0 6px">
-        ${gridLines}
-        <div style="display:flex;align-items:flex-end;gap:${gap}px;height:100%;position:absolute;bottom:0;left:6px;right:6px">${barEls}</div>
-      </div>`;
-
-      // X-axis labels — lebar dan posisi harus sinkron persis dengan bar
-      const xLabelEls=items.map(({label})=>{
-        const words=label.split(' ');
-        const shortLabel=words.length>1?words[0]+'<br>'+words.slice(1).join(' '):label;
-        return `<div style="width:${barW}px;flex-shrink:0;text-align:center;color:#3D526B;font-size:8px;line-height:1.3">${shortLabel}</div>`;
-      }).join('');
-
-      return `<div style="padding:20px 0 0">
-        <!-- Chart row -->
-        <div style="display:flex;align-items:flex-end">
-          ${yAxis}
-          ${plotArea}
-        </div>
-        <!-- X labels row — margin-left sama dengan yAxisW, padding sama dengan plotArea -->
-        <div style="display:flex;gap:${gap}px;margin-left:${yAxisW}px;padding:5px 6px 0;box-sizing:border-box">
-          ${xLabelEls}
-        </div>
-      </div>`;
-    };
-
-    const legend=()=>`
-<div style="display:flex;gap:18px;margin-top:14px;padding-top:10px;border-top:1px solid #E4EAF2">
-  ${[['#1E9E58','&ge; 100%'],['#1558A8','75&ndash;99%'],['#F47B20','50&ndash;74%'],['#e63946','&lt; 50%']]
-    .map(([c,l])=>`<div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:${c}"></div><span style="font-size:11px;color:#3D526B;font-weight:600">${l}</span></div>`)
-    .join('')}
-</div>`;
-
-    const wrap=(content,pg,tot)=>`
-<div style="width:${W}px;background:#F0F4F9;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#0D1B2E">
-  ${pageHeader()}
-  ${filterBar()}
-  <div style="padding:16px 20px 20px">${content}</div>
-  ${pageFooter(pg,tot)}
-</div>`;
-
-    const card=(accentColor,content,extraStyle='')=>`
-<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);${extraStyle}">
-  <div style="height:5px;background:${accentColor}"></div>
-  <div style="padding:18px 20px">${content}</div>
-</div>`;
-
-    const cardTitle=(title,desc,badge,badgeColor)=>`
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
-  <div>
-    <div style="font-size:16px;font-weight:800;color:#0D1B2E">${title}</div>
-    ${desc?`<div style="font-size:14px;color:#3D526B;font-weight:600;margin-top:3px">${desc}</div>`:''}
-  </div>
-  ${badge?`<span style="background:${badgeColor||'#1558A8'};color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap">${badge}</span>`:''}
-</div>`;
-
-    const statCardsHtml=`
-<div style="display:flex;justify-content:center;margin-bottom:18px">
-  <div style="background:#1558A8;border-radius:14px;padding:18px 40px;text-align:center;color:#fff;box-shadow:0 4px 14px #1558A855">
-    <div style="font-size:28px;font-weight:900;line-height:1">${totalKel}</div>
-    <div style="font-size:12px;font-weight:700;margin-top:6px;opacity:.95">Total Kelurahan</div>
-    <div style="font-size:10px;opacity:.75;margin-top:3px">data tercatat</div>
-  </div>
-</div>`;
-
-    const kecBarItems=kecList.map(kn=>({label:kn,val:kecMap[kn].sum/kecMap[kn].cnt,color:sColor(kecMap[kn].sum/kecMap[kn].cnt)}));
-    const catBarItems=CAT_NAMES.map(cn=>({label:cn,val:catAvg[cn].cnt>0?catAvg[cn].sum/catAvg[cn].cnt:0,color:sColor(catAvg[cn].cnt>0?catAvg[cn].sum/catAvg[cn].cnt:0)}));
-
-    const page1Content=`
-${statCardsHtml}
-<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
-  ${card('#F47B20',
-    cardTitle('Progres per Kecamatan','Rata-rata persentase progres pengisian tiap kecamatan','Diagram Batang','#1558A8')+
-    vBarSection(kecBarItems,260)+legend()
-  )}
-  ${card('#1E9E58',
-    cardTitle('Progres per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
-    hBarSection(catBarItems)
-  )}
-</div>`;
-
-    const container=document.getElementById('pdf-render');
-    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-    const PW=doc.internal.pageSize.getWidth();
-    const PH=doc.internal.pageSize.getHeight();
-
-    const renderPage=async(htmlContent,pageIdx)=>{
-      container.style.cssText=`position:fixed;left:0;top:0;z-index:99999;width:${W}px;background:#F0F4F9;`;
-      container.innerHTML=htmlContent;
-      await new Promise(r=>setTimeout(r,400));
-      const canvas=await html2canvas(container,{
-        scale:2,useCORS:true,allowTaint:true,
-        width:W,height:container.scrollHeight,
-        windowWidth:W,logging:false,backgroundColor:'#F0F4F9'
-      });
-      container.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:1122px;';
-      container.innerHTML='';
-      const imgData=canvas.toDataURL('image/jpeg',0.95);
-      if(pageIdx>0) doc.addPage();
-      doc.addImage(imgData,'JPEG',0,0,PW,PH);
-    };
-
-    await renderPage(wrap(page1Content,1,totalPages),0);
-
-    for(let ki=0;ki<kecList.length;ki++){
-      const kecName=kecList[ki];
-      const kd=kecMap[kecName];
-      const kecAvg=kd.sum/kd.cnt;
-      const kc=sColor(kecAvg);
-
-      const kelGroupMap={};
-      for(const r of kd.rows){
-        if(!kelGroupMap[r.kel]) kelGroupMap[r.kel]={sum:0,cnt:0};
-        kelGroupMap[r.kel].sum+=r.totalProg;
-        kelGroupMap[r.kel].cnt++;
-      }
-      const uniqueKelNames=Object.keys(kelGroupMap).sort();
-      const kelBarItems2=uniqueKelNames.map(kn=>({
-        label:kn,
-        val:kelGroupMap[kn].sum/kelGroupMap[kn].cnt,
-        color:sColor(kelGroupMap[kn].sum/kelGroupMap[kn].cnt)
+    // ════════════════════════════════════════════════════════
+    // MODE 1: Filter Kelurahan spesifik → 1 halaman
+    // ════════════════════════════════════════════════════════
+    if (fKelVal) {
+      const avg = calcAvgProg(kelRows);
+      const catAvg = calcCatAvg(kelRows);
+      const catItems = CAT_NAMES.map(cn => ({
+        label: cn,
+        val: catAvg[cn].cnt > 0 ? Math.round((catAvg[cn].sum / catAvg[cn].cnt) * 10) / 10 : 0,
+        color: sColor(catAvg[cn].cnt > 0 ? catAvg[cn].sum / catAvg[cn].cnt : 0)
       }));
 
-      const kecCatItems=CAT_NAMES.map(cn=>{
-        let s=0,c2=0;
-        for(const r of kd.rows){s+=r.cats[cn]?.prog||0;c2++;}
-        const avg=c2>0?s/c2:0;
-        return{label:cn,val:avg,color:sColor(avg)};
-      });
+      // Ambil info kelurahan
+      const kelInfo = kelRows[0] || {};
+      const kecNama = kelInfo.kec || fKec;
 
-      // Grafik horizontal bar per kecamatan (semua kecamatan dari data filtered)
-      const allKecMap={};
-      for(const r2 of kelRows){
-        if(!allKecMap[r2.kec]) allKecMap[r2.kec]={sum:0,cnt:0};
-        allKecMap[r2.kec].sum+=r2.totalProg;
-        allKecMap[r2.kec].cnt++;
-      }
-      const allKecItems=Object.keys(allKecMap).sort().map(kn=>({
-        label:kn,
-        val:Math.round((allKecMap[kn].sum/allKecMap[kn].cnt)*10)/10,
-        color:sColor(allKecMap[kn].sum/allKecMap[kn].cnt),
-        isActive: kn===kecName
-      }));
-      const vBarKecSection=(()=>{
-        return `<div style="padding:4px 0">`+allKecItems.map(({label,val,color,isActive})=>`
-<div style="padding:5px 0;border-bottom:1px solid #F0F4F9;${isActive?'background:#FFF3E0;border-radius:8px;padding:7px 8px;margin:2px 0;border-left:4px solid #C45800;':'padding-left:12px;'}">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <span style="color:${isActive?'#C45800':'#0D1B2E'};font-size:${isActive?'12px':'11px'};font-weight:${isActive?'900':'600'}">${label}${isActive?' ◀':''}</span>
-    <span style="color:${color};font-size:${isActive?'13px':'11px'};font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
+      const content = `
+<div style="text-align:center;margin-bottom:18px">
+  <div style="display:inline-block;background:#1558A8;color:#fff;font-size:13px;font-weight:800;padding:10px 28px;border-radius:10px">
+    ${fKelVal} — ${kecNama}${fTahunVal ? ' (' + fTahunVal + ')' : ''}
   </div>
-  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:${isActive?'18px':'14px'};overflow:hidden">
-    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;${isActive?'box-shadow:inset 0 -2px 4px rgba(0,0,0,.15);':''}"></div>
-  </div>
-</div>`).join('')+`</div>`;
-      })();
-
-      const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
-      const tblRows=sortedRows.map((r,i)=>`
-<tr style="background:${i%2===0?'#fff':'#F8FAFD'}">
-  <td style="padding:7px 10px;color:#8A9DB8;font-size:10px;text-align:center;border-right:1px solid #E4EAF2">${i+1}</td>
-  <td style="padding:7px 12px;font-weight:700;font-size:11px;border-right:1px solid #E4EAF2">${r.kel}</td>
-  <td style="padding:7px 8px;text-align:center;font-size:10px;color:#5A7290;border-right:1px solid #E4EAF2">${r.tahun}</td>
-  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalPeng.toLocaleString('id')}</td>
-  <td style="padding:7px 10px;text-align:right;font-size:10px;border-right:1px solid #E4EAF2">${r.totalTgt.toLocaleString('id')}</td>
-  <td style="padding:7px 8px;text-align:center;font-weight:900;font-size:12px;color:${sColor(r.totalProg)};background:${sColor(r.totalProg)}15;border-right:1px solid #E4EAF2">${r.totalProg.toFixed(1)}%</td>
-  ${CAT_NAMES.map(cn=>`<td style="padding:7px 5px;text-align:center;font-size:9px;color:${sColor(r.cats[cn]?.prog||0)};font-weight:700;border-right:1px solid #F0F4F9">${(r.cats[cn]?.prog||0).toFixed(1)}%</td>`).join('')}
-</tr>`).join('');
-
-      const tabelDetail=`
-<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-top:16px">
-  <div style="background:linear-gradient(90deg,#7A3500,#A84A00);padding:12px 20px;display:flex;align-items:center;gap:10px">
-    <div style="width:5px;height:22px;background:${kc};border-radius:3px"></div>
-    <span style="color:#fff;font-size:14px;font-weight:800">Detail Data Kelurahan &mdash; Semua 10 Kategori</span>
-  </div>
-  <table style="width:100%;border-collapse:collapse">
-    <thead>
-      <tr style="background:#A84A00">
-        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1)">No</th>
-        <th style="padding:9px 12px;color:#fff;font-size:10px;font-weight:700;text-align:left;border-right:1px solid rgba(255,255,255,.1);min-width:110px">Kelurahan</th>
-        <th style="padding:9px 8px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Thn</th>
-        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid rgba(255,255,255,.1);white-space:nowrap">Pengisian</th>
-        <th style="padding:9px 10px;color:#fff;font-size:10px;font-weight:700;text-align:right;border-right:1px solid rgba(255,255,255,.1);white-space:nowrap">Target</th>
-        <th style="padding:9px 8px;color:#fff;font-size:10px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.1);background:#7A3500">Total %</th>
-        ${CAT_NAMES.map(cn=>`<th style="padding:9px 5px;color:#FFD580;font-size:9px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.07);white-space:nowrap">${cn}</th>`).join('')}
-      </tr>
-    </thead>
-    <tbody>${tblRows}</tbody>
-  </table>
-</div>`;
-
-      const kecContent=`
-<div style="display:grid;grid-template-columns:2fr 3fr 2fr;gap:16px;margin-bottom:16px;align-items:stretch">
-  ${card('#1558A8',
-    cardTitle('Progres per Kecamatan','Perbandingan antar kecamatan<br>(baris oranye = kecamatan ini)','Horizontal Bar','#1558A8')+
-    vBarKecSection+legend()
-  ,'height:100%')}
-  ${card('#F47B20',
-    cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b> | <b>Kecamatan '+kecName+'</b>'+(fKel!=='Semua'?' | <b>Kelurahan '+fKel+'</b>':'')+'<br>Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
-    vBarSection(kelBarItems2,300)+legend()
-  ,'height:100%')}
-  ${card('#1E9E58',
-    cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
-    hBarSection(kecCatItems)
-  ,'height:100%')}
 </div>
-${tabelDetail}`;
+${pieAndKatLayout(
+  'Progres Kelurahan',
+  `<b>${fKelVal}</b> | ${kecNama}`,
+  avg,
+  'Pie Chart',
+  '#F47B20',
+  catItems,
+  260
+)}`;
 
-      await renderPage(wrap(kecContent,ki+2,totalPages),ki+1);
+      await renderPage(wp(content, 1, 1), 0);
     }
 
+    // ════════════════════════════════════════════════════════
+    // MODE 2: Filter Kota Palu (fKecRaw === '__KOTA_PALU__')
+    // Halaman 1: Pie + Kategori Kota Palu
+    // Halaman 2–9: Pie + Kategori per Kecamatan
+    // ════════════════════════════════════════════════════════
+    else if (fKecRaw === '__KOTA_PALU__') {
+      // Semua kecamatan dari allData (tidak difilter per kecamatan)
+      const allKelRows = buildKelMap(allData.filter(d =>
+        (!fTahunVal || d.tahun == fTahunVal) &&
+        (!fKatVal || d.kategori === fKatVal)
+      ));
+
+      // Daftar kecamatan
+      const kecNames = [...new Set(allKelRows.map(r => r.kec))].sort();
+      const totalPages = 1 + kecNames.length;
+
+      // Halaman 1: Kota Palu keseluruhan
+      const kotaAvg = calcAvgProg(allKelRows);
+      const kotaCatAvg = calcCatAvg(allKelRows);
+      const kotaCatItems = CAT_NAMES.map(cn => ({
+        label: cn,
+        val: kotaCatAvg[cn].cnt > 0 ? Math.round((kotaCatAvg[cn].sum / kotaCatAvg[cn].cnt) * 10) / 10 : 0,
+        color: sColor(kotaCatAvg[cn].cnt > 0 ? kotaCatAvg[cn].sum / kotaCatAvg[cn].cnt : 0)
+      }));
+
+      const page1 = `
+<div style="text-align:center;margin-bottom:18px">
+  <div style="display:inline-block;background:#C45800;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
+    Kota Palu — Gambaran Umum${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+  </div>
+</div>
+${pieAndKatLayout(
+  'Progres Kota Palu',
+  'Rata-rata seluruh kecamatan di Kota Palu',
+  kotaAvg,
+  'Pie Chart',
+  '#C45800',
+  kotaCatItems,
+  280
+)}`;
+      await renderPage(wp(page1, 1, totalPages), 0);
+
+      // Halaman 2–9: per kecamatan
+      for (let ki = 0; ki < kecNames.length; ki++) {
+        const kecName = kecNames[ki];
+        const kecRows = allKelRows.filter(r => r.kec === kecName);
+        const kecAvg = calcAvgProg(kecRows);
+        const kecCatAvg = calcCatAvg(kecRows);
+        const kecCatItems = CAT_NAMES.map(cn => ({
+          label: cn,
+          val: kecCatAvg[cn].cnt > 0 ? Math.round((kecCatAvg[cn].sum / kecCatAvg[cn].cnt) * 10) / 10 : 0,
+          color: sColor(kecCatAvg[cn].cnt > 0 ? kecCatAvg[cn].sum / kecCatAvg[cn].cnt : 0)
+        }));
+
+        const pageContent = `
+<div style="text-align:center;margin-bottom:18px">
+  <div style="display:inline-block;background:#1558A8;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
+    Kecamatan ${kecName}${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+  </div>
+</div>
+${pieAndKatLayout(
+  'Progres Kecamatan ' + kecName,
+  'Rata-rata progres seluruh kelurahan di kecamatan ini',
+  kecAvg,
+  'Pie Chart',
+  '#1558A8',
+  kecCatItems,
+  260
+)}`;
+        await renderPage(wp(pageContent, ki + 2, totalPages), ki + 1);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MODE 3: Semua kecamatan atau kecamatan tertentu (tanpa kelurahan spesifik)
+    // Halaman 1: Pie + Kategori Kota Palu
+    // Halaman 2–N: Pie kecamatan + bar kelurahan + kategori + tabel detail
+    // ════════════════════════════════════════════════════════
+    else {
+      const kecNames = fKecRaw
+        ? [fKecRaw]
+        : [...new Set(kelRows.map(r => r.kec))].sort();
+
+      const totalPages = 1 + kecNames.length;
+
+      // Halaman 1: gambaran keseluruhan (semua dari filtered)
+      const kotaAvg = calcAvgProg(kelRows);
+      const kotaCatAvg = calcCatAvg(kelRows);
+      const kotaCatItems = CAT_NAMES.map(cn => ({
+        label: cn,
+        val: kotaCatAvg[cn].cnt > 0 ? Math.round((kotaCatAvg[cn].sum / kotaCatAvg[cn].cnt) * 10) / 10 : 0,
+        color: sColor(kotaCatAvg[cn].cnt > 0 ? kotaCatAvg[cn].sum / kotaCatAvg[cn].cnt : 0)
+      }));
+      const judulH1 = fKecRaw ? `Kecamatan ${fKecRaw}` : 'Kota Palu';
+
+      const page1 = `
+<div style="text-align:center;margin-bottom:18px">
+  <div style="display:inline-block;background:#C45800;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
+    ${judulH1} — Gambaran Umum${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+  </div>
+</div>
+${pieAndKatLayout(
+  'Progres ' + judulH1,
+  fKecRaw ? `Rata-rata progres seluruh kelurahan di ${fKecRaw}` : 'Rata-rata seluruh kecamatan di Kota Palu',
+  kotaAvg,
+  'Pie Chart',
+  '#C45800',
+  kotaCatItems,
+  280
+)}`;
+      await renderPage(wp(page1, 1, totalPages), 0);
+
+      // Halaman per kecamatan
+      for (let ki = 0; ki < kecNames.length; ki++) {
+        const kecName = kecNames[ki];
+        const kecRows = kelRows.filter(r => r.kec === kecName);
+        const kecAvg = calcAvgProg(kecRows);
+        const kecCatAvg = calcCatAvg(kecRows);
+        const kecCatItems = CAT_NAMES.map(cn => ({
+          label: cn,
+          val: kecCatAvg[cn].cnt > 0 ? Math.round((kecCatAvg[cn].sum / kecCatAvg[cn].cnt) * 10) / 10 : 0,
+          color: sColor(kecCatAvg[cn].cnt > 0 ? kecCatAvg[cn].sum / kecCatAvg[cn].cnt : 0)
+        }));
+
+        // Bar kelurahan
+        const kelGroupMap = {};
+        for (const r of kecRows) {
+          if (!kelGroupMap[r.kel]) kelGroupMap[r.kel] = { sum: 0, cnt: 0 };
+          kelGroupMap[r.kel].sum += r.totalProg; kelGroupMap[r.kel].cnt++;
+        }
+        const kelBarItems = Object.keys(kelGroupMap).sort().map(kn => ({
+          label: kn,
+          val: Math.round((kelGroupMap[kn].sum / kelGroupMap[kn].cnt) * 10) / 10,
+          color: sColor(kelGroupMap[kn].sum / kelGroupMap[kn].cnt)
+        }));
+
+        const pieSvg = buildPieSVG(kecAvg, 200, '', 'progres');
+        const pieColor = sColor(kecAvg);
+
+        const pageContent = `
+<div style="text-align:center;margin-bottom:16px">
+  <div style="display:inline-block;background:#1558A8;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
+    Kecamatan ${kecName}${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:16px;margin-bottom:16px">
+  ${card('#F47B20', `
+    ${cardTitle('Progres', `Kecamatan ${kecName}`, 'Pie Chart', '#F47B20')}
+    <div style="display:flex;flex-direction:column;align-items:center;padding:4px 0">
+      ${pieSvg}
+      <div style="margin-top:12px;text-align:center">
+        <div style="font-size:26px;font-weight:900;color:${pieColor};line-height:1">${kecAvg.toFixed(1)}%</div>
+        <div style="font-size:11px;color:#8A9DB8;font-weight:600;margin-top:4px">Rata-rata Progres</div>
+      </div>
+      ${legendHtml()}
+    </div>
+  `)}
+  ${card('#1558A8', `
+    ${cardTitle('Progres per Kelurahan', `Kecamatan ${kecName}`, 'Diagram Batang', '#1558A8')}
+    ${vBarSection(kelBarItems, 260)}
+    ${legendHtml()}
+  `)}
+  ${card('#1E9E58', `
+    ${cardTitle('Rata-rata per Kategori', `Kecamatan ${kecName}`, 'Horizontal Bar', '#1E9E58')}
+    ${hBarSection(kecCatItems)}
+  `)}
+</div>
+${tabelDetailHtml([...kecRows].sort((a,b) => a.kel.localeCompare(b.kel) || a.tahun - b.tahun), kecName)}`;
+
+        await renderPage(wp(pageContent, ki + 2, totalPages), ki + 1);
+      }
+    }
+
+    // Simpan PDF
     const namaFile = [
       'laporan_monev',
       fTahun !== 'Semua' ? fTahun : '',
@@ -1047,12 +1131,16 @@ ${tabelDetail}`;
       fKel !== 'Semua' ? fKel.replace(/\s+/g,'_') : '',
       ts
     ].filter(Boolean).join('_');
-    doc.save(namaFile+'.pdf');
+    doc.save(namaFile + '.pdf');
+
   } finally {
-    const btn=document.querySelector('button[onclick="downloadPDF()"]');
-    if(btn){btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF';}
-    const c=document.getElementById('pdf-render');
-    if(c){c.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:1122px;';c.innerHTML='';}
+    const btn = document.querySelector('button[onclick="downloadPDF()"]');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF';
+    }
+    const c = document.getElementById('pdf-render');
+    if (c) { c.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;width:1122px;'; c.innerHTML = ''; }
   }
 }
 
@@ -1061,3 +1149,4 @@ loadAllData();
 </script>
 </body>
 </html>
+
