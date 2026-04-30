@@ -800,17 +800,16 @@ async function downloadPDF() {
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
-      const yAxisW=42;
-      const barW=Math.max(16,Math.min(46,Math.floor((560-yAxisW)/Math.max(items.length,1))-6));
+      const yAxisW=40;
+      const barW=Math.max(16,Math.min(46,Math.floor((560-yAxisW)/Math.max(items.length,1))-5));
       const bars=items.map(({label,val,color})=>{
         const h=Math.max(4,Math.round(val*scale));
-        const words=label.split(' ');
-        const shortLabel=words.length>1?words[0]+'<br>'+words.slice(1).join(' '):label;
-        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:${barW}px;max-width:${barW+24}px;height:${chartH+32}px">
-          <div style="color:${color};font-size:9px;font-weight:800;margin-bottom:3px;white-space:nowrap">${val.toFixed(1)}%</div>
+        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:${barW}px;max-width:${barW+24}px;height:${chartH}px">
+          <div style="color:${color};font-size:8.5px;font-weight:800;margin-bottom:3px;white-space:nowrap">${val.toFixed(1)}%</div>
           <div style="width:${barW}px;height:${h}px;background:${color};border-radius:5px 5px 0 0;box-shadow:0 2px 6px ${color}44;flex-shrink:0"></div>
         </div>`;
       }).join('');
+      // Y-axis labels + grid lines
       const yLabels=[0,25,50,75,100].map(pct=>{
         const bot=Math.round(pct*scale);
         return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;pointer-events:none">
@@ -818,26 +817,36 @@ async function downloadPDF() {
           <div style="position:absolute;left:${yAxisW}px;right:0;border-top:1px dashed ${pct===100?'#2563EB33':'#E4EAF2'}"></div>
         </div>`;
       }).join('');
-      return `<div style="position:relative;padding:28px 0 0">
-        <div style="position:relative;display:flex;align-items:flex-end">
-          <!-- Garis Y kiri -->
-          <div style="position:absolute;left:${yAxisW}px;top:0;bottom:0;border-left:2px solid #CBD5E1;z-index:1"></div>
-          <!-- Wrapper tinggi penuh untuk Y labels + grid -->
-          <div style="position:absolute;left:0;right:0;top:0;height:${chartH}px">${yLabels}</div>
-          <!-- Spacer sumbu Y -->
-          <div style="width:${yAxisW}px;flex-shrink:0;height:${chartH}px"></div>
-          <!-- Area batang -->
+      // X-axis labels (nama kelurahan) di bawah garis baseline
+      const xLabels=items.map(({label,color})=>{
+        const words=label.split(' ');
+        const shortLabel=words.length>1?words[0]+'<br>'+words.slice(1).join(' '):label;
+        return `<div style="flex:1;min-width:${barW}px;max-width:${barW+24}px;text-align:center;color:#3D526B;font-size:8.5px;line-height:1.3;padding:0 1px">${shortLabel}</div>`;
+      }).join('');
+      return `<div style="position:relative;padding:24px 0 0">
+        <!-- Chart area -->
+        <div style="display:flex;align-items:flex-end;position:relative">
+          <!-- Y-axis column (labels + left border) -->
+          <div style="width:${yAxisW}px;flex-shrink:0;position:relative;height:${chartH}px;border-right:2px solid #CBD5E1;border-left:2px solid #CBD5E1">
+            ${[0,25,50,75,100].map(pct=>{
+              const bot=Math.round(pct*scale);
+              return `<div style="position:absolute;bottom:${bot}px;right:6px;color:#8A9DB8;font-size:9px;font-weight:700;transform:translateY(50%);white-space:nowrap">${pct}%</div>`;
+            }).join('')}
+          </div>
+          <!-- Bar area -->
           <div style="flex:1;position:relative;height:${chartH}px;border-bottom:2px solid #CBD5E1;overflow:visible">
+            <!-- Grid lines -->
+            ${[25,50,75,100].map(pct=>{
+              const bot=Math.round(pct*scale);
+              return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;border-top:1px dashed ${pct===100?'#2563EB33':'#E4EAF2'};pointer-events:none"></div>`;
+            }).join('')}
+            <!-- Bars -->
             <div style="display:flex;align-items:flex-end;gap:3px;height:100%;position:absolute;bottom:0;left:6px;right:6px">${bars}</div>
           </div>
         </div>
-        <!-- Label sumbu X -->
-        <div style="display:flex;margin-left:${yAxisW}px;margin-top:5px;padding:0 6px">
-          ${items.map(({label,color})=>{
-            const words=label.split(' ');
-            const shortLabel=words.length>1?words[0]+'<br>'+words.slice(1).join(' '):label;
-            return `<div style="flex:1;min-width:${barW}px;max-width:${barW+24}px;text-align:center;color:#3D526B;font-size:8.5px;line-height:1.3;padding:0 1px">${shortLabel}</div>`;
-          }).join('')}
+        <!-- X-axis labels di bawah garis baseline -->
+        <div style="display:flex;margin-left:${yAxisW}px;margin-top:6px;padding:0 6px;border-top:none">
+          ${xLabels}
         </div>
       </div>`;
     };
@@ -960,14 +969,16 @@ ${statCardsHtml}
         isActive: kn===kecName
       }));
       const vBarKecSection=(()=>{
-        return allKecItems.map(({label,val,color,isActive})=>`
-<div style="display:flex;align-items:center;gap:0;padding:6px 0;border-bottom:1px solid #F0F4F9;background:${isActive?'#FFF8F0':'transparent'};border-radius:${isActive?'6px':'0'}">
-  <div style="min-width:130px;max-width:130px;text-align:right;padding-right:10px;color:${isActive?'#C45800':'#0D1B2E'};font-size:11px;font-weight:${isActive?'800':'600'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
-  <div style="flex:1;background:#E4EAF2;border-radius:6px;height:18px;overflow:hidden;position:relative">
-    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;transition:width .3s;${isActive?'box-shadow:0 0 0 2px #C4580066;':''}"></div>
+        return `<div style="padding:4px 0">`+allKecItems.map(({label,val,color,isActive})=>`
+<div style="padding:5px 0;border-bottom:1px solid #F0F4F9;background:${isActive?'#FFF8F0':'transparent'}">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <span style="color:${isActive?'#C45800':'#0D1B2E'};font-size:11px;font-weight:${isActive?'800':'600'}">${label}</span>
+    <span style="color:${color};font-size:11px;font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
   </div>
-  <div style="min-width:52px;text-align:left;padding-left:8px;color:${color};font-size:12px;font-weight:800">${val>0?val.toFixed(1)+'%':'—'}</div>
-</div>`).join('');
+  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:16px;overflow:hidden">
+    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;${isActive?'box-shadow:0 0 0 2px #C4580066;':''}"></div>
+  </div>
+</div>`).join('')+`</div>`;
       })();
 
       const sortedRows=[...kd.rows].sort((a,b)=>a.kel.localeCompare(b.kel)||a.tahun-b.tahun);
