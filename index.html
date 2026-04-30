@@ -978,12 +978,12 @@ ${pieAndKatLayout(
       const page1 = `
 <div style="text-align:center;margin-bottom:18px">
   <div style="display:inline-block;background:#C45800;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
-    Kota Palu — Gambaran Umum${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+    Kota Palu${fTahunVal ? ' (' + fTahunVal + ')' : ''}
   </div>
 </div>
 ${pieAndKatLayout(
   'Progres Kota Palu',
-  'Rata-rata seluruh kecamatan di Kota Palu',
+  '',
   kotaAvg,
   'Pie Chart',
   '#C45800',
@@ -1012,7 +1012,7 @@ ${pieAndKatLayout(
 </div>
 ${pieAndKatLayout(
   'Progres Kecamatan ' + kecName,
-  'Rata-rata progres seluruh kelurahan di kecamatan ini',
+  '',
   kecAvg,
   'Pie Chart',
   '#1558A8',
@@ -1048,12 +1048,12 @@ ${pieAndKatLayout(
       const page1 = `
 <div style="text-align:center;margin-bottom:18px">
   <div style="display:inline-block;background:#C45800;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:10px">
-    ${judulH1} — Gambaran Umum${fTahunVal ? ' (' + fTahunVal + ')' : ''}
+    ${judulH1}${fTahunVal ? ' (' + fTahunVal + ')' : ''}
   </div>
 </div>
 ${pieAndKatLayout(
   'Progres ' + judulH1,
-  fKecRaw ? `Rata-rata progres seluruh kelurahan di ${fKecRaw}` : 'Rata-rata seluruh kecamatan di Kota Palu',
+  '',
   kotaAvg,
   'Pie Chart',
   '#C45800',
@@ -1149,4 +1149,3 @@ loadAllData();
 </script>
 </body>
 </html>
-
