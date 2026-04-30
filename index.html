@@ -788,14 +788,16 @@ async function downloadPDF() {
   <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Halaman ${pg} dari ${tot}</span>
 </div>`;
 
-    const hBarSection=(items)=>items.map(({label,val,color})=>`
-<div style="display:flex;align-items:center;gap:0;padding:6px 0;border-bottom:1px solid #F0F4F9">
-  <div style="min-width:140px;text-align:right;padding-right:12px;color:#0D1B2E;font-size:12px;font-weight:600">${label}</div>
-  <div style="flex:1;background:#E4EAF2;border-radius:6px;height:18px;overflow:hidden;position:relative">
-    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;transition:width .3s"></div>
+    const hBarSection=(items)=>`<div style="padding:4px 0">`+items.map(({label,val,color})=>`
+<div style="padding:5px 0;border-bottom:1px solid #F0F4F9">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <span style="color:#0D1B2E;font-size:11px;font-weight:600">${label}</span>
+    <span style="color:${color};font-size:11px;font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
   </div>
-  <div style="min-width:56px;text-align:left;padding-left:10px;color:${color};font-size:13px;font-weight:800">${val>0?val.toFixed(1)+'%':'&#8212;'}</div>
-</div>`).join('');
+  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:16px;overflow:hidden">
+    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px"></div>
+  </div>
+</div>`).join('')+`</div>`;
 
     const vBarSection=(items,chartH=180)=>{
       const maxV=Math.max(...items.map(x=>x.val),100);
@@ -1016,19 +1018,19 @@ ${statCardsHtml}
 </div>`;
 
       const kecContent=`
-<div style="display:grid;grid-template-columns:2fr 3fr 2fr;gap:16px;margin-bottom:16px">
+<div style="display:grid;grid-template-columns:2fr 3fr 2fr;gap:16px;margin-bottom:16px;align-items:stretch">
   ${card('#1558A8',
     cardTitle('Progres per Kecamatan','Perbandingan antar kecamatan<br>(baris oranye = kecamatan ini)','Horizontal Bar','#1558A8')+
     vBarKecSection+legend()
-  )}
+  ,'height:100%')}
   ${card('#F47B20',
     cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b> | <b>Kecamatan '+kecName+'</b>'+(fKel!=='Semua'?' | <b>Kelurahan '+fKel+'</b>':'')+'<br>Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
-    vBarSection(kelBarItems2,220)+legend()
-  )}
+    vBarSection(kelBarItems2,300)+legend()
+  ,'height:100%')}
   ${card('#1E9E58',
     cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
     hBarSection(kecCatItems)
-  )}
+  ,'height:100%')}
 </div>
 ${tabelDetail}`;
 
