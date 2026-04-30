@@ -992,14 +992,14 @@ ${statCardsHtml}
 </div>`;
 
       const kecContent=`
-<div style="display:grid;grid-template-columns:3fr 2fr 2fr;gap:16px;margin-bottom:16px">
+<div style="display:grid;grid-template-columns:2fr 3fr 2fr;gap:16px;margin-bottom:16px">
+  ${card('#1558A8',
+    cardTitle('Progres per Kecamatan','Perbandingan antar kecamatan (&#9658; = kecamatan ini)','Horizontal Bar','#1558A8')+
+    hBarKecSection
+  )}
   ${card('#F47B20',
     cardTitle('Progres per Kelurahan','<b>Tahun '+fTahun+'</b> | <b>Kecamatan '+kecName+'</b>'+(fKel!=='Semua'?' | <b>Kelurahan '+fKel+'</b>':'')+'<br>Rata-rata persentase progres tiap kelurahan','Diagram Batang','#C45800')+
     vBarSection(kelBarItems2,220)+legend()
-  )}
-  ${card('#1558A8',
-    cardTitle('Progres per Kecamatan','Perbandingan antar kecamatan (▶ = kecamatan ini)','Horizontal Bar','#1558A8')+
-    hBarKecSection
   )}
   ${card('#1E9E58',
     cardTitle('Rata-rata per Kategori','Rata-rata progres berdasarkan kategori data','Horizontal Bar','#F47B20')+
