@@ -803,52 +803,55 @@ async function downloadPDF() {
       const maxV=Math.max(...items.map(x=>x.val),100);
       const scale=chartH/maxV;
       const yAxisW=40;
-      const barW=Math.max(16,Math.min(46,Math.floor((560-yAxisW)/Math.max(items.length,1))-5));
-      const bars=items.map(({label,val,color})=>{
-        const h=Math.max(4,Math.round(val*scale));
-        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:${barW}px;max-width:${barW+24}px;height:${chartH}px">
-          <div style="color:${color};font-size:8.5px;font-weight:800;margin-bottom:3px;white-space:nowrap">${val.toFixed(1)}%</div>
-          <div style="width:${barW}px;height:${h}px;background:${color};border-radius:5px 5px 0 0;box-shadow:0 2px 6px ${color}44;flex-shrink:0"></div>
-        </div>`;
-      }).join('');
-      // Y-axis labels + grid lines
-      const yLabels=[0,25,50,75,100].map(pct=>{
+      const gap=4;
+      const totalBars=items.length;
+      const barW=Math.max(14,Math.min(46,Math.floor((540-yAxisW-gap*totalBars)/totalBars)));
+
+      // Y-axis label column (kiri)
+      const yAxis=`<div style="width:${yAxisW}px;flex-shrink:0;position:relative;height:${chartH}px;">
+        ${[0,25,50,75,100].map(pct=>{
+          const bot=Math.round(pct*scale);
+          return `<div style="position:absolute;bottom:${bot}px;right:5px;color:#8A9DB8;font-size:9px;font-weight:700;transform:translateY(50%);white-space:nowrap;line-height:1">${pct}%</div>`;
+        }).join('')}
+        <!-- border kanan Y-axis -->
+        <div style="position:absolute;top:0;bottom:-2px;right:0;border-right:2px solid #CBD5E1"></div>
+      </div>`;
+
+      // Plot area
+      const gridLines=[25,50,75,100].map(pct=>{
         const bot=Math.round(pct*scale);
-        return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;pointer-events:none">
-          <span style="position:absolute;left:0;top:-7px;color:#8A9DB8;font-size:9px;font-weight:700;width:${yAxisW-4}px;text-align:right;line-height:1">${pct}%</span>
-          <div style="position:absolute;left:${yAxisW}px;right:0;border-top:1px dashed ${pct===100?'#2563EB33':'#E4EAF2'}"></div>
+        return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;border-top:1px dashed ${pct===100?'#2563EB30':'#E4EAF2'};pointer-events:none"></div>`;
+      }).join('');
+
+      const barEls=items.map(({val,color})=>{
+        const h=Math.max(3,Math.round(val*scale));
+        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:${barW}px;height:${chartH}px;flex-shrink:0">
+          <div style="color:${color};font-size:8px;font-weight:800;margin-bottom:2px;white-space:nowrap">${val.toFixed(1)}%</div>
+          <div style="width:100%;height:${h}px;background:${color};border-radius:4px 4px 0 0;box-shadow:0 2px 5px ${color}55;flex-shrink:0"></div>
         </div>`;
       }).join('');
-      // X-axis labels (nama kelurahan) di bawah garis baseline
-      const xLabels=items.map(({label,color})=>{
+
+      const plotArea=`<div style="flex:1;position:relative;height:${chartH}px;border-bottom:2px solid #CBD5E1;overflow:visible;padding:0 6px">
+        ${gridLines}
+        <div style="display:flex;align-items:flex-end;gap:${gap}px;height:100%;position:absolute;bottom:0;left:6px;right:6px">${barEls}</div>
+      </div>`;
+
+      // X-axis labels — lebar dan posisi harus sinkron persis dengan bar
+      const xLabelEls=items.map(({label})=>{
         const words=label.split(' ');
         const shortLabel=words.length>1?words[0]+'<br>'+words.slice(1).join(' '):label;
-        return `<div style="flex:1;min-width:${barW}px;max-width:${barW+24}px;text-align:center;color:#3D526B;font-size:8.5px;line-height:1.3;padding:0 1px">${shortLabel}</div>`;
+        return `<div style="width:${barW}px;flex-shrink:0;text-align:center;color:#3D526B;font-size:8px;line-height:1.3">${shortLabel}</div>`;
       }).join('');
-      return `<div style="position:relative;padding:24px 0 0">
-        <!-- Chart area -->
-        <div style="display:flex;align-items:flex-end;position:relative">
-          <!-- Y-axis column (labels + left border) -->
-          <div style="width:${yAxisW}px;flex-shrink:0;position:relative;height:${chartH}px;border-right:2px solid #CBD5E1;border-left:2px solid #CBD5E1">
-            ${[0,25,50,75,100].map(pct=>{
-              const bot=Math.round(pct*scale);
-              return `<div style="position:absolute;bottom:${bot}px;right:6px;color:#8A9DB8;font-size:9px;font-weight:700;transform:translateY(50%);white-space:nowrap">${pct}%</div>`;
-            }).join('')}
-          </div>
-          <!-- Bar area -->
-          <div style="flex:1;position:relative;height:${chartH}px;border-bottom:2px solid #CBD5E1;overflow:visible">
-            <!-- Grid lines -->
-            ${[25,50,75,100].map(pct=>{
-              const bot=Math.round(pct*scale);
-              return `<div style="position:absolute;bottom:${bot}px;left:0;right:0;border-top:1px dashed ${pct===100?'#2563EB33':'#E4EAF2'};pointer-events:none"></div>`;
-            }).join('')}
-            <!-- Bars -->
-            <div style="display:flex;align-items:flex-end;gap:3px;height:100%;position:absolute;bottom:0;left:6px;right:6px">${bars}</div>
-          </div>
+
+      return `<div style="padding:20px 0 0">
+        <!-- Chart row -->
+        <div style="display:flex;align-items:flex-end">
+          ${yAxis}
+          ${plotArea}
         </div>
-        <!-- X-axis labels di bawah garis baseline -->
-        <div style="display:flex;margin-left:${yAxisW}px;margin-top:6px;padding:0 6px;border-top:none">
-          ${xLabels}
+        <!-- X labels row — margin-left sama dengan yAxisW, padding sama dengan plotArea -->
+        <div style="display:flex;gap:${gap}px;margin-left:${yAxisW}px;padding:5px 6px 0;box-sizing:border-box">
+          ${xLabelEls}
         </div>
       </div>`;
     };
@@ -972,13 +975,13 @@ ${statCardsHtml}
       }));
       const vBarKecSection=(()=>{
         return `<div style="padding:4px 0">`+allKecItems.map(({label,val,color,isActive})=>`
-<div style="padding:5px 0;border-bottom:1px solid #F0F4F9;background:${isActive?'#FFF8F0':'transparent'}">
+<div style="padding:5px 0;border-bottom:1px solid #F0F4F9;${isActive?'background:#FFF3E0;border-radius:8px;padding:7px 8px;margin:2px 0;border-left:4px solid #C45800;':'padding-left:12px;'}">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <span style="color:${isActive?'#C45800':'#0D1B2E'};font-size:11px;font-weight:${isActive?'800':'600'}">${label}</span>
-    <span style="color:${color};font-size:11px;font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
+    <span style="color:${isActive?'#C45800':'#0D1B2E'};font-size:${isActive?'12px':'11px'};font-weight:${isActive?'900':'600'}">${label}${isActive?' ◀':''}</span>
+    <span style="color:${color};font-size:${isActive?'13px':'11px'};font-weight:800;margin-left:8px;white-space:nowrap">${val>0?val.toFixed(1)+'%':'—'}</span>
   </div>
-  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:16px;overflow:hidden">
-    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;${isActive?'box-shadow:0 0 0 2px #C4580066;':''}"></div>
+  <div style="width:100%;background:#E4EAF2;border-radius:6px;height:${isActive?'18px':'14px'};overflow:hidden">
+    <div style="width:${Math.min(val,100)}%;background:${color};height:100%;border-radius:6px;${isActive?'box-shadow:inset 0 -2px 4px rgba(0,0,0,.15);':''}"></div>
   </div>
 </div>`).join('')+`</div>`;
       })();
